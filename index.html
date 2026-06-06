@@ -617,6 +617,57 @@ tbody tr:last-child { border-bottom: none; }
   .kpi-grid { grid-template-columns: 1fr; }
   .kanban { grid-template-columns: 1fr; }
 }
+
+/* TELA DE CADASTRO */
+#cadastro-screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 20px;
+}
+#cadastro-screen.show { display: flex; }
+.cadastro-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 40px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+.cadastro-logo { font-size: 1.8rem; font-weight: 800; color: var(--accent); text-align: center; margin-bottom: 4px; }
+.cadastro-tagline { text-align: center; color: var(--text2); font-size: 0.85rem; margin-bottom: 24px; }
+.cadastro-titulo { font-size: 1.1rem; font-weight: 700; color: var(--text); text-align: center; margin-bottom: 20px; }
+.planos-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin: 16px 0; }
+.plano-card {
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+}
+.plano-card:hover { border-color: var(--accent); }
+.plano-card.ativo { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+.plano-card .plano-nome { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+.plano-card .plano-preco { font-size: 1.1rem; font-weight: 800; color: var(--accent); margin: 4px 0; }
+.plano-card .plano-desc { font-size: 0.7rem; color: var(--text2); }
+.plano-card.destaque { border-color: var(--accent); background: rgba(59,130,246,0.08); }
+.plano-badge { background: var(--accent); color: #fff; font-size: 0.65rem; border-radius: 20px; padding: 2px 8px; display: inline-block; margin-bottom: 4px; }
+.cad-link { text-align: center; margin-top: 16px; font-size: 0.85rem; color: var(--text2); }
+.cad-link a { color: var(--accent); cursor: pointer; text-decoration: none; }
+.trial-info { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 8px; padding: 10px 14px; text-align: center; font-size: 0.82rem; color: #22c55e; margin-bottom: 16px; }
+
+
+.plano-preco-risco { font-size: 0.85rem; color: var(--text2); text-decoration: line-through; margin-bottom: 0; }
+.plano-preco span { font-size: 0.75rem; color: var(--text2); }
+.promo-label { color: #22c55e !important; font-weight: 600; font-size: 0.72rem !important; }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
 function excluirGarantia(id){
@@ -648,7 +699,146 @@ function excluirGarantia(id){
       </div>
       <button class="login-btn" onclick="loginUnificado()">Entrar →</button>
       <div class="login-err" id="login-error">Usuário ou senha incorretos.</div>
+      <div class="cad-link" style="margin-top:14px">Não tem conta? <a onclick="abrirCadastro()" style="color:var(--accent);cursor:pointer;">Criar grátis</a></div>
 
+    </div>
+  </div>
+</div>
+
+
+<!-- TELA DE CADASTRO -->
+<div id="cadastro-screen">
+  <div class="cadastro-card">
+    <div class="cadastro-logo">👁 Gestótica</div>
+    <div class="cadastro-tagline">Sistema de Gestão para Ótica</div>
+    <div class="cadastro-titulo">Criar conta gratuita</div>
+    <div class="trial-info">🎁 7 dias grátis · Sem cartão de crédito</div>
+
+    <div class="lf">
+      <label>Nome da Ótica *</label>
+      <input type="text" id="cad-nome-otica" placeholder="Ex: Ótica Central">
+    </div>
+    <div class="lf">
+      <label>Seu Nome *</label>
+      <input type="text" id="cad-nome-resp" placeholder="Nome do responsável">
+    </div>
+    <div class="lf">
+      <label>E-mail *</label>
+      <input type="email" id="cad-email" placeholder="seu@email.com">
+    </div>
+    <div class="lf">
+      <label>Telefone / WhatsApp *</label>
+      <input type="text" id="cad-tel" placeholder="(71) 99999-9999">
+    </div>
+    <div class="lf">
+      <label>Criar senha *</label>
+      <input type="password" id="cad-senha" placeholder="Mínimo 6 caracteres">
+    </div>
+
+    <div class="lf">
+      <label>Escolha seu plano</label>
+      <div class="planos-grid">
+        <div class="plano-card" id="plano-basico" onclick="selecionarPlano('basico')">
+          <div class="plano-nome">Básico</div>
+          <div class="plano-preco-risco">R$97</div>
+          <div class="plano-preco">R$77<span>/mês</span></div>
+          <div class="plano-desc promo-label">3 meses · depois R$97</div>
+          <div class="plano-desc">2 usuários · Sem NF</div>
+        </div>
+        <div class="plano-card destaque ativo" id="plano-pro" onclick="selecionarPlano('pro')">
+          <div class="plano-badge">🔥 Mais popular</div>
+          <div class="plano-nome">Pro</div>
+          <div class="plano-preco-risco">R$247</div>
+          <div class="plano-preco">R$197<span>/mês</span></div>
+          <div class="plano-desc promo-label">3 meses · depois R$247</div>
+          <div class="plano-desc">5 usuários · NF-e + NFC-e</div>
+        </div>
+        <div class="plano-card" id="plano-premium" onclick="selecionarPlano('premium')">
+          <div class="plano-nome">Premium</div>
+          <div class="plano-preco-risco">R$397</div>
+          <div class="plano-preco">R$317<span>/mês</span></div>
+          <div class="plano-desc promo-label">3 meses · depois R$397</div>
+          <div class="plano-desc">Ilimitado · NF-e + NFC-e + NFS-e</div>
+        </div>
+      </div>
+      <input type="hidden" id="cad-plano" value="pro">
+    </div>
+
+    <div class="login-err" id="cad-erro" style="display:none;margin-bottom:10px;"></div>
+    <button class="login-btn" id="cad-btn" onclick="cadastrarOtica()">Criar conta grátis →</button>
+    <div class="cad-link">Já tem conta? <a onclick="voltarLogin()">Entrar aqui</a></div>
+  </div>
+</div>
+
+
+<!-- MÓDULO NOTA FISCAL -->
+<div id="pg-notafiscal" class="pg" style="display:none">
+  <div class="pg-header">
+    <h2>Nota Fiscal Eletrônica</h2>
+    <div style="display:flex;gap:8px">
+      <button class="btn" onclick="abrirEmitirNF()"><i class="ph ph-plus"></i> Emitir NF</button>
+    </div>
+  </div>
+
+  <div id="nf-config-aviso" style="background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3);border-radius:10px;padding:16px;margin-bottom:20px;display:none">
+    <b>⚙️ Configure sua API Key da Focus NFe</b><br>
+    <span style="font-size:0.85rem;color:var(--text2)">Vá em Configurações → Nota Fiscal e insira sua chave da Focus NFe para ativar a emissão.</span>
+    <button class="btn btn-sm" style="margin-top:8px" onclick="render('configuracoes')">Ir para Configurações</button>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+      <div class="kpi-card"><div class="kpi-val" id="nf-total-mes">0</div><div class="kpi-label">NFs este mês</div></div>
+      <div class="kpi-card"><div class="kpi-val" id="nf-valor-mes">R$0</div><div class="kpi-label">Valor total</div></div>
+      <div class="kpi-card"><div class="kpi-val" id="nf-pendentes">0</div><div class="kpi-label">Pendentes</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <table class="tbl" id="nf-lista">
+      <thead><tr><th>Número</th><th>Cliente</th><th>Valor</th><th>Tipo</th><th>Status</th><th>Data</th><th>Ações</th></tr></thead>
+      <tbody id="nf-tbody"><tr><td colspan="7" style="text-align:center;color:var(--text2);padding:32px">Nenhuma NF emitida ainda.</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL EMITIR NF -->
+<div id="modal-nf" class="modal-bg" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-card" style="max-width:560px">
+    <div class="modal-header"><h3>Emitir Nota Fiscal</h3><button onclick="document.getElementById('modal-nf').style.display='none'">✕</button></div>
+    <div class="modal-body">
+      <div class="lf">
+        <label>Tipo de NF</label>
+        <select id="nf-tipo">
+          <option value="NFe">NF-e (Produto)</option>
+          <option value="NFCe">NFC-e (Consumidor)</option>
+          <option value="NFSe">NFS-e (Serviço)</option>
+        </select>
+      </div>
+      <div class="lf">
+        <label>Cliente</label>
+        <select id="nf-cliente"><option value="">Selecione...</option></select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="lf"><label>Valor (R$)</label><input type="number" id="nf-valor" placeholder="0,00" step="0.01"></div>
+        <div class="lf"><label>Natureza da operação</label><input type="text" id="nf-natureza" value="Venda de mercadoria"></div>
+      </div>
+      <div class="lf">
+        <label>Descrição</label>
+        <textarea id="nf-descricao" rows="3" placeholder="Ex: Venda de óculos de grau + lentes..."></textarea>
+      </div>
+      <div class="lf">
+        <label>Ambiente</label>
+        <select id="nf-ambiente">
+          <option value="homologacao">Homologação (Testes)</option>
+          <option value="producao">Produção (Real)</option>
+        </select>
+      </div>
+      <div id="nf-erro" style="color:#ef4444;font-size:0.85rem;display:none;margin-top:8px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="document.getElementById('modal-nf').style.display='none'">Cancelar</button>
+      <button class="btn" id="nf-emitir-btn" onclick="emitirNF()">Emitir NF</button>
     </div>
   </div>
 </div>
@@ -750,6 +940,9 @@ function excluirGarantia(id){
     </div>
     <div class="ni" onclick="nav('entrada')" data-page="entrada">
       <span class="ic">➕</span> Entrada
+    </div>
+    <div class="ni" onclick="nav('notafiscal')" data-page="notafiscal">
+      <i class="ph ph-receipt"></i><span>Nota Fiscal</span>
     </div>
     <div class="ni" onclick="nav('garantias')" data-page="garantias">
       <span class="ic">🛡️</span> Garantias
@@ -1215,7 +1408,7 @@ function carregarExemplos(){
 // NAV (com controle de acesso embutido)
 // ============================================================
 let currentPage='dashboard';vendaPreenchida=null;osNumAtual='';
-var PAGE_TITLES={dashboard:'Dashboard',orcamentos:'Orçamentos',agendamentos:'Agendamentos',caixa:'Controle de Caixa','nova-venda':'Nova Venda',pedidos:'Pedidos',trocas:'Trocas e Devoluções','nova-os':'Nova Ordem de Serviço','painel-os':'Painel de OS','historico-os':'Histórico de OS',fluxo:'Fluxo de Caixa',pagar:'Contas a Pagar',receber:'Contas a Receber',comissoes:'Comissões de Vendedores',dre:'DRE Simplificado',produtos:'Produtos',entrada:'Entrada de Produtos',garantias:'Garantias','rel-estoque':'Relatório de Estoque',metas:'Metas',relatorios:'Relatórios',clientes:'Clientes',aniversarios:'Aniversariantes',convenios:'Convênios',vendedores:'Vendedores',laboratorios:'Laboratórios',config:'Configurações',usuarios:'Usuários do Sistema'};
+var PAGE_TITLES={dashboard:'Dashboard','notafiscal':'Nota Fiscal Eletrônica',orcamentos:'Orçamentos',agendamentos:'Agendamentos',caixa:'Controle de Caixa','nova-venda':'Nova Venda',pedidos:'Pedidos',trocas:'Trocas e Devoluções','nova-os':'Nova Ordem de Serviço','painel-os':'Painel de OS','historico-os':'Histórico de OS',fluxo:'Fluxo de Caixa',pagar:'Contas a Pagar',receber:'Contas a Receber',comissoes:'Comissões de Vendedores',dre:'DRE Simplificado',produtos:'Produtos',entrada:'Entrada de Produtos',garantias:'Garantias','rel-estoque':'Relatório de Estoque',metas:'Metas',relatorios:'Relatórios',clientes:'Clientes',aniversarios:'Aniversariantes',convenios:'Convênios',vendedores:'Vendedores',laboratorios:'Laboratórios',config:'Configurações',usuarios:'Usuários do Sistema'};
 var PAGINAS_VENDEDOR=['dashboard','orcamentos','agendamentos','nova-venda','pedidos','trocas','nova-os','painel-os','historico-os','clientes','aniversarios'];
 
 function nav(page){
@@ -1303,7 +1496,7 @@ function optLabs(){var l=L(K.laboratorios,[]);return l.map(function(x){return '<
 // ============================================================
 function render(page){
   var c=document.getElementById('content');
-  var pages={dashboard:renderDash,orcamentos:renderOrcamentos,agendamentos:renderAgendamentos,caixa:renderCaixa,'nova-venda':renderNovaVenda,pedidos:renderPedidos,trocas:renderTrocas,'nova-os':renderNovaOS,'painel-os':renderPainelOS,'historico-os':renderHistOS,fluxo:renderFluxo,pagar:renderPagar,receber:renderReceber,comissoes:renderComissoes,dre:renderDRE,produtos:renderProdutos,entrada:renderEntrada,garantias:renderGarantias,'rel-estoque':renderRelEstoque,metas:renderMetas,relatorios:renderRelatorios,clientes:renderClientes,aniversarios:renderAniversarios,convenios:renderConvenios,vendedores:renderVendedores,laboratorios:renderLaboratorios,config:renderConfig,usuarios:renderUsuarios,'crediario':renderCrediario,'analise-credito':renderAnaliseCredito,cobrancas:renderCobrancas,'receitas-vencidas':renderReceitasVencidas,etiquetas:renderEtiquetas,'importar-xml':renderImportarXML,'importar-excel':renderImportarExcel,'fornecedores':renderFornecedores};
+  var pages={dashboard:renderDash,orcamentos:renderOrcamentos,agendamentos:renderAgendamentos,caixa:renderCaixa,'nova-venda':renderNovaVenda,pedidos:renderPedidos,trocas:renderTrocas,'nova-os':renderNovaOS,'painel-os':renderPainelOS,'historico-os':renderHistOS,fluxo:renderFluxo,pagar:renderPagar,receber:renderReceber,comissoes:renderComissoes,dre:renderDRE,produtos:renderProdutos,entrada:renderEntrada,garantias:renderGarantias,'rel-estoque':renderRelEstoque,metas:renderMetas,relatorios:renderRelatorios,clientes:renderClientes,aniversarios:renderAniversarios,convenios:renderConvenios,vendedores:renderVendedores,laboratorios:renderLaboratorios,config:renderConfig,usuarios:renderUsuarios,'crediario':renderCrediario,'analise-credito':renderAnaliseCredito,cobrancas:renderCobrancas,'receitas-vencidas':renderReceitasVencidas,etiquetas:renderEtiquetas,'importar-xml':renderImportarXML,'importar-excel':renderImportarExcel,'fornecedores':renderFornecedores,'notafiscal':renderNotaFiscal};
   c.innerHTML=pages[page]?pages[page]():'<p style="color:var(--text3)">Em desenvolvimento...</p>';
 }
 
@@ -4607,6 +4800,217 @@ function cancelarExcel(){
 }
 
 function excluirGarantia(id){if(!confirm('Excluir esta garantia?'))return;var gars=L(K.garantias,[]).filter(function(g){return g.id!==id;});S(K.garantias,gars);toast('Garantia excluída','danger');render('garantias');}
+
+var FOCUS_NFE_KEY = '';
+
+function getFocusKey(){
+  var cfg = L('gt_config_nf', {});
+  return cfg.focusKey || '';
+}
+
+function abrirEmitirNF(){
+  var key = getFocusKey();
+  if(!key){
+    toast('Configure sua API Key da Focus NFe em Configurações → Nota Fiscal','warning');
+    return;
+  }
+  var clientes = L(K.clientes, []);
+  var sel = document.getElementById('nf-cliente');
+  sel.innerHTML = '<option value="">Selecione...</option>';
+  clientes.forEach(function(c){
+    sel.innerHTML += '<option value="'+c.id+'">'+c.nome+'</option>';
+  });
+  document.getElementById('modal-nf').style.display = 'flex';
+}
+
+function emitirNF(){
+  var key = getFocusKey();
+  var tipo = document.getElementById('nf-tipo').value;
+  var clienteId = document.getElementById('nf-cliente').value;
+  var valor = parseFloat(document.getElementById('nf-valor').value) || 0;
+  var natureza = document.getElementById('nf-natureza').value;
+  var descricao = document.getElementById('nf-descricao').value;
+  var ambiente = document.getElementById('nf-ambiente').value;
+  var erro = document.getElementById('nf-erro');
+  var btn = document.getElementById('nf-emitir-btn');
+
+  erro.style.display = 'none';
+  if(!clienteId || !valor){
+    erro.textContent = 'Selecione o cliente e informe o valor.';
+    erro.style.display = 'block';
+    return;
+  }
+
+  var clientes = L(K.clientes, []);
+  var cliente = clientes.find(function(c){ return c.id === clienteId; });
+  if(!cliente){ erro.textContent = 'Cliente não encontrado.'; erro.style.display='block'; return; }
+
+  btn.textContent = 'Emitindo...';
+  btn.disabled = true;
+
+  // Monta payload Focus NFe
+  var ref = 'gestotica_' + Date.now();
+  var payload = {
+    natureza_operacao: natureza || 'Venda de mercadoria',
+    data_emissao: new Date().toISOString().split('T')[0] + 'T' + new Date().toTimeString().split(' ')[0] + '-03:00',
+    tipo_documento: '1',
+    finalidade_emissao: '1',
+    consumidor_final: '1',
+    presenca_comprador: '1',
+    emitente: {
+      cnpj: L('gt_config_nf',{}).cnpj || '',
+      nome: L('gt_config_nf',{}).nomeEmpresa || 'Ótica',
+      regime_tributario: '1'
+    },
+    destinatario: {
+      cpf_cnpj: cliente.cpf || '',
+      nome: cliente.nome,
+      email: cliente.email || ''
+    },
+    items: [{
+      numero_item: '1',
+      codigo_produto: '001',
+      descricao: descricao || 'Produto óptico',
+      cfop: '5102',
+      unidade_comercial: 'UN',
+      quantidade_comercial: 1,
+      valor_unitario_comercial: valor,
+      valor_total_bruto: valor,
+      icms_origem: '0',
+      icms_modalidade_determinacao_bc: '3',
+      icms_aliquota: 0,
+      icms_valor: 0,
+      pis_modalidade: '07',
+      cofins_modalidade: '07'
+    }],
+    formas_pagamento: [{
+      forma_pagamento: '01',
+      valor_pagamento: valor
+    }]
+  };
+
+  var url = 'https://homologacao.focusnfe.com.br/v2/nfe?ref=' + ref;
+  if(ambiente === 'producao') url = 'https://api.focusnfe.com.br/v2/nfe?ref=' + ref;
+
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Basic ' + btoa(key + ':'),
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  }).then(function(r){ return r.json(); }).then(function(data){
+    btn.textContent = 'Emitir NF';
+    btn.disabled = false;
+    if(data.status === 'autorizado' || data.status === 'processando' || data.caminho_xml){
+      // Salva NF localmente
+      var nfs = L('gt_nfs', []);
+      nfs.unshift({
+        id: ref,
+        numero: data.numero_nfe || ref,
+        cliente: cliente.nome,
+        clienteId: clienteId,
+        valor: valor,
+        tipo: tipo,
+        status: data.status || 'processando',
+        ambiente: ambiente,
+        chave: data.chave_nfe || '',
+        data: new Date().toISOString()
+      });
+      S('gt_nfs', nfs);
+      document.getElementById('modal-nf').style.display = 'none';
+      toast('NF enviada para processamento! Status: ' + (data.status||'processando'), 'success');
+      renderNFLista();
+    } else {
+      erro.textContent = 'Erro: ' + (data.mensagem || data.erros || JSON.stringify(data));
+      erro.style.display = 'block';
+    }
+  }).catch(function(e){
+    btn.textContent = 'Emitir NF';
+    btn.disabled = false;
+    erro.textContent = 'Erro de conexão com Focus NFe. Verifique sua API Key.';
+    erro.style.display = 'block';
+  });
+}
+
+function renderNFLista(){
+  var nfs = L('gt_nfs', []);
+  var tbody = document.getElementById('nf-tbody');
+  if(!tbody) return;
+  if(!nfs.length){
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:32px">Nenhuma NF emitida ainda.</td></tr>';
+    return;
+  }
+  var mes = new Date().getMonth();
+  var totalMes = 0, valorMes = 0, pendentes = 0;
+  tbody.innerHTML = nfs.map(function(nf){
+    var d = new Date(nf.data);
+    if(d.getMonth() === mes){ totalMes++; valorMes += nf.valor; }
+    if(nf.status === 'processando') pendentes++;
+    var badge = nf.status === 'autorizado' ? 'badge-green' : nf.status === 'cancelado' ? 'badge-red' : 'badge-yellow';
+    return '<tr>'
+      +'<td>'+nf.numero+'</td>'
+      +'<td>'+nf.cliente+'</td>'
+      +'<td>R$'+nf.valor.toFixed(2)+'</td>'
+      +'<td>'+nf.tipo+'</td>'
+      +'<td><span class="badge '+badge+'">'+nf.status+'</span></td>'
+      +'<td>'+d.toLocaleDateString('pt-BR')+'</td>'
+      +'<td><button class="btn btn-sm" onclick="consultarNF(''+nf.id+'')">Consultar</button></td>'
+      +'</tr>';
+  }).join('');
+  var el = document.getElementById('nf-total-mes');
+  if(el) el.textContent = totalMes;
+  el = document.getElementById('nf-valor-mes');
+  if(el) el.textContent = 'R$'+valorMes.toFixed(2);
+  el = document.getElementById('nf-pendentes');
+  if(el) el.textContent = pendentes;
+}
+
+function consultarNF(ref){
+  var key = getFocusKey();
+  if(!key){ toast('Configure sua API Key','warning'); return; }
+  var cfg = L('gt_config_nf', {});
+  var base = cfg.ambiente === 'producao' ? 'https://api.focusnfe.com.br' : 'https://homologacao.focusnfe.com.br';
+  fetch(base+'/v2/nfe/'+ref, {
+    headers:{ 'Authorization': 'Basic ' + btoa(key+':') }
+  }).then(function(r){ return r.json(); }).then(function(data){
+    var nfs = L('gt_nfs',[]);
+    var idx = nfs.findIndex(function(n){ return n.id === ref; });
+    if(idx>=0){ nfs[idx].status = data.status || nfs[idx].status; S('gt_nfs', nfs); }
+    toast('Status: '+(data.status||'desconhecido')+(data.numero_nfe?' | NF-e: '+data.numero_nfe:''), 'info');
+    renderNFLista();
+  }).catch(function(){ toast('Erro ao consultar NF','danger'); });
+}
+
+
+
+function renderNotaFiscal(){
+  renderNFLista();
+  var key = getFocusKey();
+  var aviso = document.getElementById('nf-config-aviso');
+  if(aviso) aviso.style.display = key ? 'none' : 'block';
+}
+
+function salvarCfgNF(){
+  var cfg = {
+    focusKey: (document.getElementById('cfg-focus-key').value||'').trim(),
+    cnpj: (document.getElementById('cfg-nf-cnpj').value||'').trim(),
+    nomeEmpresa: (document.getElementById('cfg-nf-razao').value||'').trim(),
+    ambiente: document.getElementById('cfg-nf-ambiente').value
+  };
+  S('gt_config_nf', cfg);
+  toast('Configurações de NF salvas!','success');
+}
+
+function carregarCfgNF(){
+  var cfg = L('gt_config_nf',{});
+  var el;
+  el = document.getElementById('cfg-focus-key'); if(el) el.value = cfg.focusKey||'';
+  el = document.getElementById('cfg-nf-cnpj'); if(el) el.value = cfg.cnpj||'';
+  el = document.getElementById('cfg-nf-razao'); if(el) el.value = cfg.nomeEmpresa||'';
+  el = document.getElementById('cfg-nf-ambiente'); if(el) el.value = cfg.ambiente||'homologacao';
+}
+
 function loginUnificado(){
   var u=(document.getElementById('lg-user').value||'').trim();
   var p=(document.getElementById('lg-pass').value||'');
@@ -4629,6 +5033,112 @@ function loginUnificado(){
     }).catch(function(){loginLocalUnificado(u,p,err);});
   } else { loginLocalUnificado(u,p,err); }
 }
+
+function abrirCadastro(){
+  document.getElementById('login-screen').classList.remove('show');
+  document.getElementById('cadastro-screen').classList.add('show');
+}
+function voltarLogin(){
+  document.getElementById('cadastro-screen').classList.remove('show');
+  document.getElementById('login-screen').classList.add('show');
+}
+function selecionarPlano(plano){
+  ['basico','pro','premium'].forEach(function(p){
+    document.getElementById('plano-'+p).classList.remove('ativo');
+  });
+  document.getElementById('plano-'+plano).classList.add('ativo');
+  document.getElementById('cad-plano').value=plano;
+}
+function cadastrarOtica(){
+  var nomeOtica=(document.getElementById('cad-nome-otica').value||'').trim();
+  var nomeResp=(document.getElementById('cad-nome-resp').value||'').trim();
+  var email=(document.getElementById('cad-email').value||'').trim();
+  var tel=(document.getElementById('cad-tel').value||'').trim();
+  var senha=(document.getElementById('cad-senha').value||'').trim();
+  var plano=document.getElementById('cad-plano').value;
+  var erro=document.getElementById('cad-erro');
+  var btn=document.getElementById('cad-btn');
+
+  erro.style.display='none';
+  if(!nomeOtica||!nomeResp||!email||!senha){
+    erro.textContent='Preencha todos os campos obrigatórios.';
+    erro.style.display='block';
+    return;
+  }
+  if(senha.length<6){
+    erro.textContent='A senha deve ter pelo menos 6 caracteres.';
+    erro.style.display='block';
+    return;
+  }
+
+  btn.textContent='Criando conta...';
+  btn.disabled=true;
+
+  if(_supabase){
+    // Criar tenant no Supabase
+    var trialAte=new Date();
+    trialAte.setDate(trialAte.getDate()+7);
+    var trialStr=trialAte.toISOString().split('T')[0];
+
+    _supabase.from('tenants').insert([{
+      nome: nomeOtica,
+      email: email,
+      telefone: tel,
+      plano: plano,
+      status: 'trial',
+      trial_ate: trialStr
+    }]).select().then(function(res){
+      if(res.error||!res.data||!res.data[0]){
+        erro.textContent='E-mail já cadastrado ou erro ao criar conta.';
+        erro.style.display='block';
+        btn.textContent='Criar conta grátis →';
+        btn.disabled=false;
+        return;
+      }
+      var tenant=res.data[0];
+      // Criar usuário admin da ótica
+      _supabase.from('usuarios').insert([{
+        tenant_id: tenant.id,
+        nome: nomeResp,
+        email: email,
+        senha_hash: btoa(senha),
+        perfil: 'admin',
+        ativo: true
+      }]).then(function(res2){
+        // Criar configurações da ótica
+        _supabase.from('configuracoes').insert([{
+          tenant_id: tenant.id,
+          nome_otica: nomeOtica,
+          telefone: tel
+        }]).then(function(){
+          // Login automático após cadastro
+          _tenantId=tenant.id;
+          _sessaoSaas={id:email,nome:nomeResp,email:email,perfil:'admin',
+            tenantId:tenant.id,tenantNome:nomeOtica,plano:plano};
+          localStorage.setItem('gt_sessao_saas',JSON.stringify(_sessaoSaas));
+          setSessao({id:email,nome:nomeResp,usuario:email,perfil:'admin',ativo:true});
+          document.getElementById('cadastro-screen').classList.remove('show');
+          toast('Bem-vindo(a) ao Gestótica, '+nomeResp+'! 🎉','success');
+          iniciarSistema();
+        });
+      });
+    });
+  } else {
+    // Modo local — salva no localStorage
+    var tenantId='tenant_'+Date.now();
+    var tenants=JSON.parse(localStorage.getItem('gt_tenants')||'[]');
+    tenants.push({id:tenantId,nome:nomeOtica,email:email,plano:plano,status:'trial'});
+    localStorage.setItem('gt_tenants',JSON.stringify(tenants));
+    var usuarios=getUsuarios();
+    usuarios.push({id:'u_'+Date.now(),nome:nomeResp,usuario:email,senha:senha,perfil:'admin',ativo:true,tenantId:tenantId});
+    S(K.usuarios,usuarios);
+    setSessao({id:email,nome:nomeResp,usuario:email,perfil:'admin',ativo:true});
+    document.getElementById('cadastro-screen').classList.remove('show');
+    toast('Conta criada! Bem-vindo(a), '+nomeResp+'! 🎉','success');
+    iniciarSistema();
+  }
+}
+
 function loginLocalUnificado(u,p,err){
   var usuarios=getUsuarios(),user=null;
   for(var i=0;i<usuarios.length;i++){if(usuarios[i].usuario===u&&usuarios[i].senha===p&&usuarios[i].ativo!==false){user=usuarios[i];break;}}
