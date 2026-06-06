@@ -942,7 +942,7 @@ function excluirGarantia(id){
       <span class="ic">➕</span> Entrada
     </div>
     <div class="ni" onclick="nav('notafiscal')" data-page="notafiscal">
-      <i class="ph ph-receipt"></i><span>Nota Fiscal</span>
+      <span class="ic">🧾</span> Nota Fiscal
     </div>
     <div class="ni" onclick="nav('garantias')" data-page="garantias">
       <span class="ic">🛡️</span> Garantias
@@ -4985,10 +4985,35 @@ function consultarNF(ref){
 
 
 function renderNotaFiscal(){
-  renderNFLista();
   var key = getFocusKey();
-  var aviso = document.getElementById('nf-config-aviso');
-  if(aviso) aviso.style.display = key ? 'none' : 'block';
+  var nfs = L('gt_nfs', []);
+  var mes = new Date().getMonth();
+  var totalMes=0, valorMes=0, pendentes=0;
+  nfs.forEach(function(nf){
+    var d=new Date(nf.data);
+    if(d.getMonth()===mes){totalMes++;valorMes+=nf.valor;}
+    if(nf.status==='processando')pendentes++;
+  });
+
+  var avisoHtml = key ? '' : '<div style="background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.3);border-radius:10px;padding:16px;margin-bottom:20px"><b>⚙️ Configure sua API Key da Focus NFe</b><br><span style="font-size:0.85rem;color:var(--text2)">Vá em Configurações e insira sua chave da Focus NFe para ativar a emissão.</span><br><button class="btn btn-sm" style="margin-top:8px" onclick="render('config')">Ir para Configurações</button></div>';
+
+  var linhasNF = nfs.length ? nfs.map(function(nf){
+    var d=new Date(nf.data);
+    var badge=nf.status==='autorizado'?'badge-green':nf.status==='cancelado'?'badge-red':'badge-yellow';
+    return '<tr><td>'+nf.numero+'</td><td>'+nf.cliente+'</td><td>R$'+nf.valor.toFixed(2)+'</td><td>'+nf.tipo+'</td><td><span class="badge '+badge+'">'+nf.status+'</span></td><td>'+d.toLocaleDateString('pt-BR')+'</td><td><button class="btn btn-sm" onclick="consultarNF(''+nf.id+'')">Consultar</button></td></tr>';
+  }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:32px">Nenhuma NF emitida ainda.</td></tr>';
+
+  return '<div class="pg-header"><h2>Nota Fiscal Eletrônica</h2><button class="btn" onclick="abrirEmitirNF()">+ Emitir NF</button></div>'
+    + avisoHtml
+    + '<div class="card" style="margin-bottom:16px"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">'
+    + '<div class="kpi-card"><div class="kpi-val">'+totalMes+'</div><div class="kpi-label">NFs este mês</div></div>'
+    + '<div class="kpi-card"><div class="kpi-val">R$'+valorMes.toFixed(2)+'</div><div class="kpi-label">Valor total</div></div>'
+    + '<div class="kpi-card"><div class="kpi-val">'+pendentes+'</div><div class="kpi-label">Pendentes</div></div>'
+    + '</div></div>'
+    + '<div class="card"><table class="tbl"><thead><tr><th>Número</th><th>Cliente</th><th>Valor</th><th>Tipo</th><th>Status</th><th>Data</th><th>Ações</th></tr></thead><tbody>'
+    + linhasNF
+    + '</tbody></table></div>'
+    + '<div id="modal-nf" class="modal-bg" style="display:none" onclick="if(event.target===this)this.style.display='none'"><div class="modal-card" style="max-width:560px"><div class="modal-header"><h3>Emitir Nota Fiscal</h3><button onclick="document.getElementById('modal-nf').style.display='none'">✕</button></div><div class="modal-body"><div class="lf"><label>Tipo de NF</label><select id="nf-tipo"><option value="NFe">NF-e (Produto)</option><option value="NFCe">NFC-e (Consumidor)</option><option value="NFSe">NFS-e (Serviço)</option></select></div><div class="lf"><label>Cliente</label><select id="nf-cliente"><option value="">Selecione...</option>'+L(K.clientes,[]).map(function(c){return '<option value="'+c.id+'">'+c.nome+'</option>';}).join('')+'</select></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div class="lf"><label>Valor (R$)</label><input type="number" id="nf-valor" placeholder="0,00" step="0.01"></div><div class="lf"><label>Natureza da operação</label><input type="text" id="nf-natureza" value="Venda de mercadoria"></div></div><div class="lf"><label>Descrição</label><textarea id="nf-descricao" rows="3" placeholder="Ex: Venda de óculos de grau + lentes..."></textarea></div><div class="lf"><label>Ambiente</label><select id="nf-ambiente"><option value="homologacao">Homologação (Testes)</option><option value="producao">Produção (Real)</option></select></div><div id="nf-erro" style="color:#ef4444;font-size:0.85rem;display:none;margin-top:8px"></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="document.getElementById('modal-nf').style.display='none'">Cancelar</button><button class="btn" id="nf-emitir-btn" onclick="emitirNF()">Emitir NF</button></div></div></div>';
 }
 
 function salvarCfgNF(){
