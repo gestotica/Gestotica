@@ -3139,6 +3139,27 @@ function renderConfig(){
   html+='<input type="file" id="imp-file" accept=".json" style="display:none" onchange="importarBkp(this)">';
   html+='</div></div>';
 
+  // Focus NFe - API Key
+  var cfgNF=L('gt_config_nf',{});
+  html+='<div class="card" style="max-width:600px;margin-bottom:16px">';
+  html+='<div class="card-title">🧾 Nota Fiscal Eletrônica (Focus NFe)</div>';
+  html+='<p style="font-size:12px;color:var(--text3);margin:8px 0 16px">Configure sua integração com a Focus NFe para emitir NF-e, NFC-e e NFS-e diretamente pelo sistema.</p>';
+  html+='<div class="fg-grid fg-2" style="margin-top:10px">';
+  html+='<div class="fg" style="grid-column:1/-1"><label>API Key Focus NFe</label>';
+  html+='<input type="text" id="cfg-focus-key" value="'+(cfgNF.focusKey||'')+'" placeholder="Cole aqui sua chave de API"></div>';
+  html+='<div class="fg"><label>CNPJ da Ótica</label>';
+  html+='<input type="text" id="cfg-nf-cnpj" value="'+(cfgNF.cnpj||'')+'" placeholder="00.000.000/0001-00"></div>';
+  html+='<div class="fg"><label>Razão Social</label>';
+  html+='<input type="text" id="cfg-nf-razao" value="'+(cfgNF.nomeEmpresa||'')+'" placeholder="Nome da empresa"></div>';
+  html+='<div class="fg"><label>Ambiente</label>';
+  html+='<select id="cfg-nf-ambiente">';
+  html+='<option value="homologacao"'+(cfgNF.ambiente==='homologacao'?' selected':'')+'>Homologação (Testes)</option>';
+  html+='<option value="producao"'+(cfgNF.ambiente==='producao'?' selected':'')+'>Produção (Real)</option>';
+  html+='</select></div>';
+  html+='</div>';
+  html+='<button class="btn btn-p" style="margin-top:12px" onclick="salvarCfgNF()">💾 Salvar Configurações NF</button>';
+  html+='</div>';
+
   // Zona de perigo
   html+='<div class="card" style="max-width:600px;border-left:4px solid var(--danger)">';
   html+='<div class="card-title" style="color:var(--red)">⚠️ Zona de Perigo</div>';
