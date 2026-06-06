@@ -4955,7 +4955,7 @@ function renderNFLista(){
       +'<td>'+nf.tipo+'</td>'
       +'<td><span class="badge '+badge+'">'+nf.status+'</span></td>'
       +'<td>'+d.toLocaleDateString('pt-BR')+'</td>'
-      +'<td><button class="btn btn-sm" onclick="consultarNF(''+nf.id+'')">Consultar</button></td>'
+      +'<td><button class="btn btn-sm" onclick="consultarNF(\''+nf.id+'\')">Consultar</button></td>'
       +'</tr>';
   }).join('');
   var el = document.getElementById('nf-total-mes');
