@@ -4119,8 +4119,12 @@ var _pagesExtra = {
 
 // Estender updateBadges para novos módulos
 var _origUpdateBadges = updateBadges;
+var _updatingBadges = false;
 function updateBadges() {
-  _origUpdateBadges();
+  if(_updatingBadges) return;
+  _updatingBadges = true;
+  try { _origUpdateBadges(); } catch(e){}
+  _updatingBadges = false;
   // Badge receitas vencidas
   var clis = L(K.clientes,[]);
   var recVenc = clis.filter(function(c){return c.receita&&c.receita.data&&diasParaVencerReceita(c.receita.data,12)<=30;}).length;
