@@ -668,6 +668,29 @@ tbody tr:last-child { border-bottom: none; }
 .plano-preco span { font-size: 0.75rem; color: var(--text2); }
 .promo-label { color: #22c55e !important; font-weight: 600; font-size: 0.72rem !important; }
 
+
+#sb.collapsed { width: 60px; min-width: 60px; }
+#sb.collapsed .sb-brand, #sb.collapsed .sb-sub,
+#sb.collapsed .sb-section-label, #sb.collapsed #sb-search,
+#sb.collapsed .ni span:not(.ic), #sb.collapsed .bdg { display: none; }
+#sb.collapsed .ni { justify-content: center; padding: 10px 0; }
+#sb.collapsed .ic { font-size: 18px; margin: 0; }
+#sb.collapsed .sb-logo { justify-content: center; padding: 18px 0; }
+#sb.collapsed .sb-logo-icon { margin: 0; }
+#main.sb-collapsed { margin-left: 60px; }
+#topbar.sb-collapsed { left: 60px; }
+.sb-toggle-btn {
+  position: absolute; right: -14px; top: 72px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  border: 2px solid var(--bg);
+  cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 300; transition: transform 0.3s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+#sb.collapsed .sb-toggle-btn { transform: rotate(180deg); right: -14px; }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
 function excluirGarantia(id){
@@ -851,6 +874,7 @@ function excluirGarantia(id){
 
 <!-- SIDEBAR -->
 <nav id="sb">
+  <button class="sb-toggle-btn" onclick="toggleSidebar()" title="Recolher menu">‹</button>
   <div class="sb-logo">
     <div class="sb-logo-icon">👁</div>
     <div>
@@ -5054,7 +5078,7 @@ function renderNotaFiscal(){
   clientes.forEach(function(c){ optsClientes += '<option value="'+c.id+'">'+c.nome+'</option>'; });
 
   var html = '<div class="pg-header"><h2>Nota Fiscal Eletronica</h2>'
-    + '<button class="btn" onclick="abrirEmitirNF()">+ Emitir NF</button></div>'
+    + '<button class="btn" onclick="abrirEmitirNFModal()">+ Emitir NF</button></div>'
     + avisoHtml
     + '<div class="card" style="margin-bottom:16px">'
     + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">'
@@ -5214,6 +5238,109 @@ function cadastrarOtica(){
     toast('Conta criada! Bem-vindo(a), '+nomeResp+'! 🎉','success');
     iniciarSistema();
   }
+}
+
+
+function toggleSidebar(){
+  var sb=document.getElementById('sb');
+  var main=document.getElementById('main');
+  sb.classList.toggle('collapsed');
+  if(main)main.classList.toggle('sb-collapsed');
+  localStorage.setItem('sb_collapsed',sb.classList.contains('collapsed')?'1':'0');
+}
+
+function abrirEmitirNFModal(){
+  var key=getFocusKey();
+  if(!key){toast('Configure sua API Key da Focus NFe em Configuracoes','warning');return;}
+  var clientes=L(K.clientes,[]);
+  var optsClientes='<option value="">Selecione...</option>';
+  clientes.forEach(function(c){optsClientes+='<option value="'+c.id+'">'+c.nome+'</option>';});
+  var cfgNF=L('gt_config_nf',{});
+  var selAmb='<select id="nf-ambiente2"><option value="homologacao"'+(cfgNF.ambiente!=='producao'?' selected':'')+'>Homologacao (Testes)</option><option value="producao"'+(cfgNF.ambiente==='producao'?' selected':'')+'>Producao (Real)</option></select>';
+  var m=document.createElement('div');
+  m.id='modal-nf-float';
+  m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center';
+  m.onclick=function(e){if(e.target===m)fecharModalNF();};
+  m.innerHTML='<div style="background:var(--surface);border-radius:16px;padding:28px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">'
+    +'<h3 style="margin:0">Emitir Nota Fiscal</h3>'
+    +'<button onclick="fecharModalNF()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text)">x</button>'
+    +'</div>'
+    +'<div class="lf"><label>Tipo de NF</label><select id="nf-tipo2"><option value="NFe">NF-e (Produto)</option><option value="NFCe">NFC-e (Consumidor)</option><option value="NFSe">NFS-e (Servico)</option></select></div>'
+    +'<div class="lf"><label>Cliente</label><select id="nf-cliente2">'+optsClientes+'</select></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    +'<div class="lf"><label>Valor (R$)</label><input type="number" id="nf-valor2" placeholder="0,00" step="0.01"></div>'
+    +'<div class="lf"><label>Natureza</label><input type="text" id="nf-natureza2" value="Venda de mercadoria"></div>'
+    +'</div>'
+    +'<div class="lf"><label>Descricao</label><textarea id="nf-descricao2" rows="3"></textarea></div>'
+    +'<div class="lf"><label>Ambiente</label>'+selAmb+'</div>'
+    +'<div id="nf-erro2" style="color:#ef4444;font-size:0.85rem;display:none;margin-top:8px"></div>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px">'
+    +'<button class="btn btn-secondary" onclick="fecharModalNF()">Cancelar</button>'
+    +'<button class="btn" id="nf-emitir-btn2" onclick="emitirNF2()">Emitir NF</button>'
+    +'</div></div>';
+  document.body.appendChild(m);
+}
+
+function fecharModalNF(){
+  var m=document.getElementById('modal-nf-float');
+  if(m)m.remove();
+}
+
+function emitirNF2(){
+  var key=getFocusKey();
+  var clienteId=(document.getElementById('nf-cliente2')||{}).value||'';
+  var valor=parseFloat((document.getElementById('nf-valor2')||{}).value)||0;
+  var natureza=(document.getElementById('nf-natureza2')||{}).value||'Venda de mercadoria';
+  var descricao=(document.getElementById('nf-descricao2')||{}).value||'';
+  var ambiente=(document.getElementById('nf-ambiente2')||{}).value||'homologacao';
+  var tipo=(document.getElementById('nf-tipo2')||{}).value||'NFe';
+  var erro=document.getElementById('nf-erro2');
+  var btn=document.getElementById('nf-emitir-btn2');
+  if(erro)erro.style.display='none';
+  if(!clienteId||!valor){if(erro){erro.textContent='Selecione o cliente e informe o valor.';erro.style.display='block';}return;}
+  var clientes=L(K.clientes,[]);
+  var cliente=clientes.find(function(c){return c.id===clienteId;});
+  if(!cliente){if(erro){erro.textContent='Cliente nao encontrado.';erro.style.display='block';}return;}
+  btn.textContent='Emitindo...';btn.disabled=true;
+  var ref='gestotica_'+Date.now();
+  var cfgNF=L('gt_config_nf',{});
+  var payload={
+    natureza_operacao:natureza,
+    data_emissao:new Date().toISOString().replace('Z','-03:00'),
+    tipo_documento:'1',finalidade_emissao:'1',consumidor_final:'1',presenca_comprador:'1',
+    emitente:{cnpj:cfgNF.cnpj||'',nome:cfgNF.nomeEmpresa||'Otica',regime_tributario:'1'},
+    destinatario:{cpf_cnpj:cliente.cpf||'',nome:cliente.nome,email:cliente.email||''},
+    items:[{numero_item:'1',codigo_produto:'001',descricao:descricao||'Produto optico',
+      cfop:'5102',unidade_comercial:'UN',quantidade_comercial:1,
+      valor_unitario_comercial:valor,valor_total_bruto:valor,
+      icms_origem:'0',icms_modalidade_determinacao_bc:'3',icms_aliquota:0,icms_valor:0,
+      pis_modalidade:'07',cofins_modalidade:'07'}],
+    formas_pagamento:[{forma_pagamento:'01',valor_pagamento:valor}]
+  };
+  var base=ambiente==='producao'?'https://api.focusnfe.com.br':'https://homologacao.focusnfe.com.br';
+  fetch(base+'/v2/nfe?ref='+ref,{
+    method:'POST',
+    headers:{'Authorization':'Basic '+btoa(key+':'),'Content-Type':'application/json'},
+    body:JSON.stringify(payload)
+  }).then(function(r){return r.json();}).then(function(data){
+    btn.textContent='Emitir NF';btn.disabled=false;
+    if(data.status==='autorizado'||data.status==='processando'||data.caminho_xml){
+      var nfs=L('gt_nfs',[]);
+      nfs.unshift({id:ref,numero:data.numero_nfe||ref,cliente:cliente.nome,clienteId:clienteId,
+        valor:valor,tipo:tipo,status:data.status||'processando',ambiente:ambiente,
+        chave:data.chave_nfe||'',data:new Date().toISOString()});
+      S('gt_nfs',nfs);
+      fecharModalNF();
+      toast('NF enviada! Status: '+(data.status||'processando'),'success');
+      render('notafiscal');
+    } else {
+      if(erro){erro.textContent='Erro: '+(data.mensagem||JSON.stringify(data));erro.style.display='block';}
+    }
+  }).catch(function(){
+    btn.textContent='Emitir NF';btn.disabled=false;
+    if(erro){erro.textContent='Erro de conexao com Focus NFe.';erro.style.display='block';}
+  });
 }
 
 function loginLocalUnificado(u,p,err){
