@@ -3120,9 +3120,10 @@ function renderConfig(){
   ];
   
   msgDefs.forEach(function(m){
+    var val = ((msgs[m.key])||m.default).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     html+='<div class="fg" style="margin-bottom:16px">';
     html+='<label style="font-weight:600">'+m.label+'</label>';
-    html+='<textarea id="msg-'+m.key+'" style="height:90px;font-size:12px;font-family:monospace">'+((msgs[m.key])||m.default)+'</textarea>';
+    html+='<textarea id="msg-'+m.key+'" style="height:90px;font-size:12px;font-family:monospace">'+val+'</textarea>';
     html+='</div>';
   });
   
