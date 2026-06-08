@@ -5343,7 +5343,6 @@ function toggleSbSection(el){
   section.classList.toggle('collapsed');
   // Salvar estado
   var label = el.querySelector('.sb-section-key');
-  <div class="sb-section-items">
   if(label){
     var key = 'sb_sec_' + label.textContent;
     localStorage.setItem(key, section.classList.contains('collapsed')?'1':'0');
@@ -5353,7 +5352,6 @@ function toggleSbSection(el){
 function restaurarSbSections(){
   document.querySelectorAll('.sb-section').forEach(function(sec){
     var label = sec.querySelector('.sb-section-key');
-  <div class="sb-section-items">
     if(!label) return;
     var key = 'sb_sec_' + label.textContent;
     var val = localStorage.getItem(key);
