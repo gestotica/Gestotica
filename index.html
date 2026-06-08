@@ -1079,8 +1079,7 @@ function excluirGarantia(id){
 // SUPABASE — Configuração e camada de dados
 // ============================================================
 var SUPA_URL='https://hjiudcwatpfjbcxcewfh.supabase.co';
-// ATENÇÃO: substitua pela sua anon key real do Supabase Dashboard → Project Settings → API
-var SUPA_KEY='COLE_AQUI_SUA_ANON_KEY_eyJ...';
+var SUPA_KEY='sb_publishable_BtJgnANKj0EIdaeNGOqlOA_tuJvJXCv';
 var _supabase=null;
 var _tenantId=null;
 var _sessaoSaas=null;
@@ -3421,7 +3420,7 @@ function excluirUsuario(id){
 // ============================================================
 function iniciarSistema(){
   setTimeout(function(){if(typeof restaurarSbSections==="function")restaurarSbSections();},100);
-  // initSupabase() já chamado em init() — Supabase já está pronto aqui
+  // initSupabase() já chamado em init() — Supabase pronto antes do login
   // Verificar sessão salva
   var sessaoSalva=localStorage.getItem('gt_sessao_saas')||localStorage.getItem('gt_sessao')||localStorage.getItem('gt_sessao_user');
   if(sessaoSalva){
@@ -3472,7 +3471,6 @@ function iniciarSistema(){
 function init(){
   // Inicializar Supabase PRIMEIRO — antes de qualquer verificação de sessão
   initSupabase();
-
   // Registrar listeners que precisam do DOM
   var modalEl=document.getElementById('modal');
   if(modalEl){
