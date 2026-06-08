@@ -3452,11 +3452,10 @@ function abrirNovoUsuario(){
   openModal('Novo Usuário',
     '<div class="fg-grid fg-2">'
     +'<div class="fg" style="grid-column:1/-1"><label>Nome Completo</label><input type="text" id="nu-nome" placeholder="Ex: Maria Silva"></div>'
-    +'<div class="fg" style="grid-column:1/-1"><label>E-mail (será o login)</label><input type="email" id="nu-email" placeholder="vendedor@email.com"></div>'
-    +'<div class="fg"><label>Perfil</label><select id="nu-perf"><option value="vendedor">Vendedor</option><option value="admin">Administrador</option></select></div>'
-    +'<div class="fg"><label>Senha (mín. 6 caracteres)</label><input type="password" id="nu-pwd" placeholder="••••••••"></div>'
-    +'<div class="fg" style="grid-column:1/-1"><label>Confirmar Senha</label><input type="password" id="nu-pwd2" placeholder="••••••••"></div>'
+    +'<div class="fg" style="grid-column:1/-1"><label>E-mail (receberá as credenciais)</label><input type="email" id="nu-email" placeholder="vendedor@email.com"></div>'
+    +'<div class="fg" style="grid-column:1/-1"><label>Perfil</label><select id="nu-perf"><option value="vendedor">Vendedor</option><option value="admin">Administrador</option></select></div>'
     +'</div>'
+    +'<div class="alert-banner ab-info" style="margin-top:12px;font-size:12px">🔐 Login e senha serão gerados automaticamente e enviados por e-mail.</div>'
     +'<div id="nu-erro" style="color:var(--red);font-size:12px;margin-top:8px;display:none"></div>'
     +'<div class="mf"><button class="btn btn-g" onclick="closeModal()">Cancelar</button>'
     +'<button class="btn btn-p" id="nu-btn" onclick="salvarNovoUsuario()">Criar Usuário</button></div>');
@@ -3464,13 +3463,12 @@ function abrirNovoUsuario(){
 
 function salvarNovoUsuario(){
   var nome=v('nu-nome'),email=(v('nu-email')||'').trim().toLowerCase();
-  var pwd=v('nu-pwd'),pwd2=v('nu-pwd2'),perf=v('nu-perf');
+  var perf=v('nu-perf');
   var erro=document.getElementById('nu-erro');
   var btn=document.getElementById('nu-btn');
   erro.style.display='none';
-  if(!nome||!email||!pwd){erro.textContent='Preencha todos os campos';erro.style.display='block';return;}
-  if(pwd!==pwd2){erro.textContent='As senhas não coincidem';erro.style.display='block';return;}
-  if(pwd.length<6){erro.textContent='Senha deve ter ao menos 6 caracteres';erro.style.display='block';return;}
+  if(!nome||!email){erro.textContent='Preencha nome e e-mail';erro.style.display='block';return;}
+  if(!email.includes('@')){erro.textContent='E-mail inválido';erro.style.display='block';return;}
   btn.textContent='Criando...';btn.disabled=true;
   if(_supabase&&_tenantId){
     // Verificar se e-mail já existe
@@ -3511,22 +3509,55 @@ function abrirEditarUsuario(id){
   var buscarEEditar=function(users){
     var u=users.find(function(x){return x.id===id;});
     if(!u){toast('Usuário não encontrado','warning');return;}
-    var login=u.email||u.usuario||'';
-    var isAdmin=login==='admin';
+    var login=u.usuario||u.email||'';
+    var email=u.email||'';
+    var isAdmin=email==='admin'||login==='admin';
     openModal('Editar Usuário',
       '<div class="fg-grid fg-2">'
       +'<div class="fg" style="grid-column:1/-1"><label>Nome Completo</label><input type="text" id="eu-nome" value="'+u.nome+'"></div>'
-      +'<div class="fg" style="grid-column:1/-1"><label>E-mail (login)</label><input type="text" id="eu-email" value="'+login+'" '+(isAdmin?'readonly':'')+'></div>'
+      +'<div class="fg"><label>Login Gestótica</label><input type="text" value="'+login+'" readonly style="opacity:0.6;cursor:not-allowed"></div>'
+      +'<div class="fg"><label>E-mail</label><input type="text" id="eu-email" value="'+email+'" '+(isAdmin?'readonly':'')+'></div>'
       +'<div class="fg"><label>Perfil</label><select id="eu-perf" '+(isAdmin?'disabled':'')+'><option value="vendedor" '+(u.perfil==="vendedor"?"selected":"")+'>Vendedor</option><option value="admin" '+(u.perfil==="admin"?"selected":"")+'>Administrador</option></select></div>'
-      +'<div class="fg"><label>Nova Senha (vazio = manter)</label><input type="password" id="eu-pwd" placeholder="Nova senha"></div>'
-      +'<div class="fg" style="grid-column:1/-1"><label>Confirmar Nova Senha</label><input type="password" id="eu-pwd2"></div>'
       +'<div class="fg"><label>Status</label><select id="eu-ativo"><option value="true" '+(u.ativo!==false?"selected":"")+'>Ativo</option><option value="false" '+(u.ativo===false?"selected":"")+'>Inativo</option></select></div>'
       +'</div>'
+      +'<hr class="sdiv">'
+      +'<div style="font-size:13px;font-weight:600;margin-bottom:10px">🔐 Redefinir Senha</div>'
+      +'<div class="fg-grid fg-2">'
+      +'<div class="fg"><label>Nova Senha (vazio = manter)</label><input type="password" id="eu-pwd" placeholder="Nova senha"></div>'
+      +'<div class="fg"><label>Confirmar Nova Senha</label><input type="password" id="eu-pwd2"></div>'
+      +'</div>'
+      +'<div style="margin-top:8px"><button class="btn btn-g btn-sm" onclick="gerarNovaSenhaUsuario(''+u.id+'',''+email+'',''+u.nome+'')">🎲 Gerar senha aleatória e enviar por e-mail</button></div>'
       +'<div id="eu-erro" style="color:var(--red);font-size:12px;margin-top:8px;display:none"></div>'
       +'<div class="mf"><button class="btn btn-g" onclick="closeModal()">Cancelar</button>'
-      +'<button class="btn btn-p" onclick="salvarEdicaoUsuario(\''+id+'\')" >Salvar</button></div>');
+      +'<button class="btn btn-p" onclick="salvarEdicaoUsuario(\''+id+'\')">Salvar</button></div>');
   };
   getUsuariosSupabase(buscarEEditar);
+}
+
+function gerarNovaSenhaUsuario(userId, email, nome){
+  if(!confirm('Gerar nova senha aleatória e enviar por e-mail para '+email+'?'))return;
+  var novaSenha=gerarSenhaForte();
+  _supabase.from('usuarios').update({senha_hash:btoa(novaSenha)}).eq('id',userId).then(function(res){
+    if(res.error){toast('Erro ao redefinir senha','danger');return;}
+    // Buscar login do usuário
+    _supabase.from('usuarios').select('usuario,login_padrao').eq('id',userId).single().then(function(r){
+      var loginGerado=(r.data&&r.data.usuario)||email;
+      initEmailJS();
+      emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE_BOASVINDAS, {
+        to_name: nome,
+        to_email: email,
+        login_gerado: loginGerado,
+        nova_senha: novaSenha,
+        nome_otica: _sessaoSaas?_sessaoSaas.tenantNome:'Gestótica'
+      }).then(function(){
+        toast('✅ Nova senha gerada e enviada por e-mail!','success');
+        closeModal();
+      }).catch(function(){
+        toast('Senha redefinida mas falha no e-mail. Nova senha: '+novaSenha,'warning');
+        closeModal();
+      });
+    });
+  });
 }
 
 function salvarEdicaoUsuario(id){
