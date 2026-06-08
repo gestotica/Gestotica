@@ -5110,7 +5110,9 @@ function loginUnificado(){
   if(!u||!p){if(err)err.classList.add('show');return;}
   if(_supabase){
     _supabase.from('usuarios').select('*,tenants(*)').eq('email',u).single().then(function(res){
-      if(res.data && res.data.senha_hash===btoa(p)){
+      console.log('Supabase login res:', res.data ? 'encontrado' : 'nulo', res.error ? res.error.message : 'sem erro');
+      if(res.data) console.log('senha_hash:', res.data.senha_hash, '| btoa:', btoa(p));
+      if(res.data && res.data.senha_hash && res.data.senha_hash.trim()===btoa(p).trim()){
         var user=res.data;
         var tenant=user.tenants;
         if(tenant&&tenant.status==='suspenso'){if(err){err.textContent='Conta suspensa.';err.classList.add('show');}return;}
