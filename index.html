@@ -1114,8 +1114,8 @@ var _supabase=null;
 // EMAILJS — Recuperação de Senha
 // ============================================================
 var EMAILJS_SERVICE='service_u1l82cp';
-var EMAILJS_TEMPLATE_RECUPERACAO='3gh6zvi';   // Esqueci minha senha
-var EMAILJS_TEMPLATE_BOASVINDAS='vjz7beh';    // Novo cadastro / novo usuário
+var EMAILJS_TEMPLATE_RECUPERACAO='3gh6zvi';
+var EMAILJS_TEMPLATE_BOASVINDAS='vjz7beh';
 var EMAILJS_TEMPLATE=EMAILJS_TEMPLATE_RECUPERACAO; // compatibilidade
 var EMAILJS_KEY='5Wvqx_yjpIaGrGxZV';
 var _emailjsInit=false;
@@ -3438,8 +3438,8 @@ function renderUsuarios(){
           +'<td><span style="padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;background:'+(isAdmin?'#fef9c3':'#bee3f8')+';color:'+(isAdmin?'#854d0e':'#2b6cb0')+'">'+(isAdmin?'Administrador':'Vendedor')+'</span></td>'
           +'<td>'+(u.ativo!==false?'<span class="badge bg-green">Ativo</span>':'<span class="badge bg-gray">Inativo</span>')+'</td>'
           +'<td style="display:flex;gap:5px">'
-          +'<button class="btn btn-sm btn-s" onclick="abrirEditarUsuario(''+u.id+'')">✏️ Editar</button>'
-          +(login!=='admin'?'<button class="btn btn-sm btn-d" onclick="excluirUsuario(''+u.id+'')">✕</button>':'')
+          +'<button class="btn btn-sm btn-s" onclick="abrirEditarUsuario(\''+u.id+'\')" >✏️ Editar</button>'
+          +(login!=='admin'?'<button class="btn btn-sm btn-d" onclick="excluirUsuario(\''+u.id+'\')" >✕</button>':'')
           +'</td></tr>';
       }).join('');
       tabela.innerHTML='<table class="zebra"><thead><tr><th>Nome</th><th>E-mail (login)</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead><tbody>'+(rows||'<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text3)">Nenhum usuário</td></tr>')+'</tbody></table>';
