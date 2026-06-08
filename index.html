@@ -697,6 +697,31 @@ body.tema-claro #watermark-logo { opacity: 0.07; }
 body:not(.tema-claro) #watermark-logo { opacity: 0.06; }
 #watermark-img { width:100%;height:100%;object-fit:contain; }
 
+
+.sb-section-label {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 12px;
+}
+.sb-section-label .sb-toggle-icon {
+  font-size: 14px;
+  transition: transform 0.25s;
+  color: var(--text2);
+  font-style: normal;
+}
+.sb-section.collapsed .sb-toggle-icon { transform: rotate(-90deg); }
+.sb-section-items {
+  overflow: hidden;
+  max-height: 600px;
+  transition: max-height 0.3s ease;
+}
+.sb-section.collapsed .sb-section-items {
+  max-height: 0;
+}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
 function excluirGarantia(id){
@@ -904,17 +929,26 @@ function excluirGarantia(id){
   </div>
 
   <div class="sb-section">
-    <div class="sb-section-label">Atendimento</div>
+    <div class="sb-section-label" onclick="toggleSbSection(this)">
+    <span class="sb-section-key">Atendimento</span>
+  <div class="sb-section-items">
+    <i class="sb-toggle-icon">▾</i>
+  </div>
     <div class="ni" onclick="nav('orcamentos')" data-page="orcamentos">
       <span class="ic">📄</span> Orçamentos
     </div>
     <div class="ni" onclick="nav('agendamentos')" data-page="agendamentos">
       <span class="ic">📅</span> Agendamentos
+  </div>
     </div>
   </div>
 
   <div class="sb-section">
-    <div class="sb-section-label">Caixa & Vendas</div>
+    <div class="sb-section-label" onclick="toggleSbSection(this)">
+    <span class="sb-section-key">Caixa & Vendas</span>
+  <div class="sb-section-items">
+    <i class="sb-toggle-icon">▾</i>
+  </div>
     <div class="ni" onclick="nav('caixa')" data-page="caixa">
       <span class="ic">🏦</span> Caixa
       <span class="bdg" id="bdg-caixa" style="display:none">●</span>
@@ -927,11 +961,16 @@ function excluirGarantia(id){
     </div>
     <div class="ni" onclick="nav('trocas')" data-page="trocas">
       <span class="ic">🔄</span> Trocas / Dev.
+  </div>
     </div>
   </div>
 
   <div class="sb-section">
-    <div class="sb-section-label">OS & Lab</div>
+    <div class="sb-section-label" onclick="toggleSbSection(this)">
+    <span class="sb-section-key">OS & Lab</span>
+  <div class="sb-section-items">
+    <i class="sb-toggle-icon">▾</i>
+  </div>
     <div class="ni" onclick="nav('nova-os')" data-page="nova-os">
       <span class="ic">🔬</span> Nova OS
     </div>
@@ -941,11 +980,16 @@ function excluirGarantia(id){
     </div>
     <div class="ni" onclick="nav('historico-os')" data-page="historico-os">
       <span class="ic">🕐</span> Histórico OS
+  </div>
     </div>
   </div>
 
   <div class="sb-section">
-    <div class="sb-section-label">Financeiro</div>
+    <div class="sb-section-label" onclick="toggleSbSection(this)">
+    <span class="sb-section-key">Financeiro</span>
+  <div class="sb-section-items">
+    <i class="sb-toggle-icon">▾</i>
+  </div>
     <div class="ni" onclick="nav('fluxo')" data-page="fluxo">
       <span class="ic">💰</span> Fluxo de Caixa
     </div>
@@ -960,11 +1004,16 @@ function excluirGarantia(id){
     </div>
     <div class="ni" onclick="nav('dre')" data-page="dre">
       <span class="ic">📊</span> DRE
+  </div>
     </div>
   </div>
 
   <div class="sb-section">
-    <div class="sb-section-label">Estoque</div>
+    <div class="sb-section-label" onclick="toggleSbSection(this)">
+    <span class="sb-section-key">Estoque</span>
+  <div class="sb-section-items">
+    <i class="sb-toggle-icon">▾</i>
+  </div>
     <div class="ni" onclick="nav('produtos')" data-page="produtos">
       <span class="ic">📦</span> Produtos
     </div>
@@ -979,11 +1028,16 @@ function excluirGarantia(id){
     </div>
     <div class="ni" onclick="nav('rel-estoque')" data-page="rel-estoque">
       <span class="ic">📋</span> Rel. Estoque
+  </div>
     </div>
   </div>
 
   <div class="sb-section">
-    <div class="sb-section-label">Recebimentos</div>
+    <div class="sb-section-label" onclick="toggleSbSection(this)">
+    <span class="sb-section-key">Recebimentos</span>
+  <div class="sb-section-items">
+    <i class="sb-toggle-icon">▾</i>
+  </div>
     <div class="ni" onclick="nav('crediario')" data-page="crediario">
       <span class="ic">💳</span> Crediário
     </div>
@@ -993,19 +1047,29 @@ function excluirGarantia(id){
     <div class="ni" onclick="nav('cobrancas')" data-page="cobrancas">
       <span class="ic">💬</span> Cobranças
       <span class="bdg" id="bdg-cobrancas" style="display:none">0</span>
+  </div>
     </div>
   </div>
 
   <div class="sb-section">
-    <div class="sb-section-label">Receituário</div>
+    <div class="sb-section-label" onclick="toggleSbSection(this)">
+    <span class="sb-section-key">Receituário</span>
+  <div class="sb-section-items">
+    <i class="sb-toggle-icon">▾</i>
+  </div>
     <div class="ni" onclick="nav('receitas-vencidas')" data-page="receitas-vencidas">
       <span class="ic">👓</span> Receitas
       <span class="bdg" id="bdg-receitas" style="display:none">0</span>
+  </div>
     </div>
   </div>
 
   <div class="sb-section">
-    <div class="sb-section-label">Ferramentas</div>
+    <div class="sb-section-label" onclick="toggleSbSection(this)">
+    <span class="sb-section-key">Ferramentas</span>
+  <div class="sb-section-items">
+    <i class="sb-toggle-icon">▾</i>
+  </div>
     <div class="ni" onclick="nav('etiquetas')" data-page="etiquetas">
       <span class="ic">🏷️</span> Etiquetas
     </div>
@@ -1017,21 +1081,31 @@ function excluirGarantia(id){
     </div>
     <div class="ni" onclick="ativarLeitorCodigo()" data-page="leitor">
       <span class="ic">📷</span> Leitor de Código
+  </div>
     </div>
   </div>
 
   <div class="sb-section">
-    <div class="sb-section-label">Análise</div>
+    <div class="sb-section-label" onclick="toggleSbSection(this)">
+    <span class="sb-section-key">Análise</span>
+  <div class="sb-section-items">
+    <i class="sb-toggle-icon">▾</i>
+  </div>
     <div class="ni" onclick="nav('metas')" data-page="metas">
       <span class="ic">🎯</span> Metas
     </div>
     <div class="ni" onclick="nav('relatorios')" data-page="relatorios">
       <span class="ic">📈</span> Relatórios
+  </div>
     </div>
   </div>
 
   <div class="sb-section">
-    <div class="sb-section-label">Cadastros</div>
+    <div class="sb-section-label" onclick="toggleSbSection(this)">
+    <span class="sb-section-key">Cadastros</span>
+  <div class="sb-section-items">
+    <i class="sb-toggle-icon">▾</i>
+  </div>
     <div class="ni" onclick="nav('clientes')" data-page="clientes">
       <span class="ic">👥</span> Clientes
     </div>
@@ -1051,8 +1125,14 @@ function excluirGarantia(id){
     <div class="ni" onclick="nav('fornecedores')" data-page="fornecedores">
       <span class="ic">🚚</span> Fornecedores
     </div>
+  <div class="sb-section-label" onclick="toggleSbSection(this)">
+    <span class="sb-section-key">Configurações</span>
+    <i class="sb-toggle-icon">▾</i>
+  </div>
+  <div class="sb-section-items">
     <div class="ni" onclick="nav('config')" data-page="config">
       <span class="ic">⚙️</span> Configurações
+    </div>
     </div>
   </div>
 </nav>
@@ -3437,6 +3517,7 @@ function excluirUsuario(id){
 // INIT
 // ============================================================
 function iniciarSistema(){
+  setTimeout(function(){if(typeof restaurarSbSections==="function")restaurarSbSections();},100);
   initSupabase();
   // Verificar sessão salva
   var sessaoSalva=localStorage.getItem('gt_sessao_saas')||localStorage.getItem('gt_sessao')||localStorage.getItem('gt_sessao_user');
@@ -5255,6 +5336,31 @@ function cadastrarOtica(){
 }
 
 
+
+function toggleSbSection(el){
+  var section = el.closest('.sb-section');
+  if(!section) return;
+  section.classList.toggle('collapsed');
+  // Salvar estado
+  var label = el.querySelector('.sb-section-key');
+  <div class="sb-section-items">
+  if(label){
+    var key = 'sb_sec_' + label.textContent;
+    localStorage.setItem(key, section.classList.contains('collapsed')?'1':'0');
+  }
+}
+
+function restaurarSbSections(){
+  document.querySelectorAll('.sb-section').forEach(function(sec){
+    var label = sec.querySelector('.sb-section-key');
+  <div class="sb-section-items">
+    if(!label) return;
+    var key = 'sb_sec_' + label.textContent;
+    var val = localStorage.getItem(key);
+    if(val === '1') sec.classList.add('collapsed');
+  });
+}
+
 function toggleSidebar(){
   var sb=document.getElementById('sb');
   var main=document.getElementById('main');
@@ -5365,6 +5471,36 @@ function loginLocalUnificado(u,p,err){
     else if(u==='vendedor'&&p==='vend123')user={id:'u2',nome:'Vendedor',usuario:'vendedor',senha:'vend123',perfil:'vendedor',ativo:true};
   }
   if(!user){if(err)err.classList.add('show');document.getElementById('lg-pass').value='';return;}
-  setSessao(user);document.getElementById('login-screen').classList.remove('show');iniciarSistema();
+  setSessao(user);
+
+  // Tentar buscar tenant no Supabase pelo email
+  if(_supabase){
+    _supabase.from('usuarios').select('*,tenants(*)').eq('email',u).single().then(function(res){
+      if(res.data && res.data.tenants){
+        var tenant = res.data.tenants;
+        _tenantId = tenant.id;
+        _sessaoSaas = {id:res.data.id,nome:res.data.nome,email:u,perfil:res.data.perfil,
+          tenantId:tenant.id,tenantNome:tenant.nome,plano:tenant.plano};
+        localStorage.setItem('gt_sessao_saas',JSON.stringify(_sessaoSaas));
+        console.log('Tenant carregado:', tenant.nome, '| ID:', tenant.id);
+        syncDoSupabase(function(){
+          document.getElementById('login-screen').classList.remove('show');
+          iniciarSistema();
+          toast('Conectado à nuvem: '+tenant.nome,'success');
+        });
+      } else {
+        // Sem tenant no Supabase — modo local
+        console.warn('Nenhum tenant encontrado no Supabase para:', u);
+        document.getElementById('login-screen').classList.remove('show');
+        iniciarSistema();
+      }
+    }).catch(function(){
+      document.getElementById('login-screen').classList.remove('show');
+      iniciarSistema();
+    });
+  } else {
+    document.getElementById('login-screen').classList.remove('show');
+    iniciarSistema();
+  }
 }
 </script></body></html>
