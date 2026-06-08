@@ -3526,7 +3526,7 @@ function abrirEditarUsuario(id){
       +'<div class="fg"><label>Nova Senha (vazio = manter)</label><input type="password" id="eu-pwd" placeholder="Nova senha"></div>'
       +'<div class="fg"><label>Confirmar Nova Senha</label><input type="password" id="eu-pwd2"></div>'
       +'</div>'
-      +'<div style="margin-top:8px"><button class="btn btn-g btn-sm" onclick="gerarNovaSenhaUsuario(''+u.id+'',''+email+'',''+u.nome+'')">🎲 Gerar senha aleatória e enviar por e-mail</button></div>'
+            +'<div style="margin-top:8px"><button class="btn btn-g btn-sm" onclick="gerarNovaSenhaUsuario(\''+u.id+'\',\''+email+'\',\''+u.nome+'\')" >🎲 Gerar senha aleatória e enviar por e-mail</button></div>'
       +'<div id="eu-erro" style="color:var(--red);font-size:12px;margin-top:8px;display:none"></div>'
       +'<div class="mf"><button class="btn btn-g" onclick="closeModal()">Cancelar</button>'
       +'<button class="btn btn-p" onclick="salvarEdicaoUsuario(\''+id+'\')">Salvar</button></div>');
