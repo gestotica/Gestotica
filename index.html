@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -754,12 +755,39 @@ function excluirGarantia(id){
       </div>
       <button class="login-btn" onmousedown="event.preventDefault()" onclick="loginUnificado()">Entrar →</button>
       <div class="login-err" id="login-error">Usuário ou senha incorretos.</div>
-      <div class="cad-link" style="margin-top:14px">Não tem conta? <a onclick="abrirCadastro()" style="color:var(--accent);cursor:pointer;">Criar grátis</a></div>
+      <div class="cad-link" style="margin-top:10px"><a onclick="abrirRecuperarSenha()" style="color:var(--text3);cursor:pointer;font-size:12px">Esqueci minha senha</a></div>
+      <div class="cad-link" style="margin-top:8px">Não tem conta? <a onclick="abrirCadastro()" style="color:var(--accent);cursor:pointer;">Criar grátis</a></div>
 
     </div>
   </div>
 </div>
 
+
+<!-- TELA DE RECUPERAÇÃO DE SENHA -->
+<div id="recuperar-screen" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:9999;align-items:center;justify-content:center;flex-direction:column">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">👁 Gestótica</div>
+      <div class="login-tagline">Recuperação de Senha</div>
+      <div id="rec-step1">
+        <p style="font-size:13px;color:var(--text2);margin-bottom:20px;text-align:center">Digite seu e-mail cadastrado e enviaremos uma senha temporária.</p>
+        <div class="lf">
+          <label>E-mail cadastrado</label>
+          <input type="email" id="rec-email" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')enviarRecuperacao()">
+        </div>
+        <button class="login-btn" onclick="enviarRecuperacao()" id="rec-btn">Enviar senha temporária →</button>
+        <div class="login-err" id="rec-erro"></div>
+      </div>
+      <div id="rec-step2" style="display:none;text-align:center">
+        <div style="font-size:48px;margin-bottom:16px">✅</div>
+        <div style="font-size:16px;font-weight:700;color:var(--green);margin-bottom:8px">E-mail enviado!</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:20px">Verifique sua caixa de entrada e use a senha temporária para acessar. Depois altere sua senha em Configurações.</p>
+        <button class="login-btn" onclick="voltarLoginRecuperacao()">Voltar ao Login</button>
+      </div>
+      <div class="cad-link" style="margin-top:14px"><a onclick="voltarLoginRecuperacao()" style="color:var(--text3);cursor:pointer;font-size:12px">← Voltar ao login</a></div>
+    </div>
+  </div>
+</div>
 
 <!-- TELA DE CADASTRO -->
 <div id="cadastro-screen">
@@ -1081,6 +1109,20 @@ function excluirGarantia(id){
 var SUPA_URL='https://hjiudcwatpfjbcxcewfh.supabase.co';
 var SUPA_KEY='sb_publishable_BtJgnANKj0EIdaeNGOqlOA_tuJvJXCv';
 var _supabase=null;
+
+// ============================================================
+// EMAILJS — Recuperação de Senha
+// ============================================================
+var EMAILJS_SERVICE='service_u1l82cp';
+var EMAILJS_TEMPLATE_RECUPERACAO='3gh6zvi';   // Esqueci minha senha
+var EMAILJS_TEMPLATE_BOASVINDAS='vjz7beh';    // Novo cadastro / novo usuário
+var EMAILJS_TEMPLATE=EMAILJS_TEMPLATE_RECUPERACAO; // compatibilidade
+var EMAILJS_KEY='5Wvqx_yjpIaGrGxZV';
+var _emailjsInit=false;
+function initEmailJS(){
+  if(_emailjsInit)return;
+  try{emailjs.init({publicKey:EMAILJS_KEY});_emailjsInit=true;}catch(e){}
+}
 var _tenantId=null;
 var _sessaoSaas=null;
 
@@ -3301,14 +3343,25 @@ function setSessao(u){localStorage.setItem('gt_sessao_user',JSON.stringify(u));}
 function clearSessao(){localStorage.removeItem('gt_sessao_user');}
 
 function getUsuarios(){
+  // Retorna usuários do localStorage (cache local)
   var pad=[
-    {id:'u1',nome:'Administrador',usuario:'admin',senha:'admin123',perfil:'admin',ativo:true},
-    {id:'u2',nome:'Vendedor',usuario:'vendedor',senha:'vend123',perfil:'vendedor',ativo:true}
+    {id:'u1',nome:'Administrador',usuario:'admin',email:'admin',senha:'admin123',perfil:'admin',ativo:true}
   ];
   var salvos=L('gt_usuarios',null);
-  if(!salvos){S('gt_usuarios',pad);return pad;}
-  if(!salvos.find(function(u){return u.usuario==='admin';}))salvos.unshift(pad[0]);
+  if(!salvos) return pad;
   return salvos;
+}
+
+function getUsuariosSupabase(callback){
+  if(!_supabase||!_tenantId){callback(getUsuarios());return;}
+  _supabase.from('usuarios').select('*').eq('tenant_id',_tenantId).then(function(res){
+    if(res.data&&res.data.length>0){
+      S('gt_usuarios',res.data);
+      callback(res.data);
+    } else {
+      callback(getUsuarios());
+    }
+  }).catch(function(){callback(getUsuarios());});
 }
 
 function mostrarLogin(){
@@ -3369,53 +3422,148 @@ function aplicarPermissoesSidebar(perfil){
 // GERENCIAR USUÁRIOS (só admin)
 // ============================================================
 function renderUsuarios(){
-  var users=getUsuarios();
-  var rows=users.map(function(u){
-    var isAdmin=u.perfil==='admin';
-    return '<tr><td style="font-weight:600">'+u.nome+'</td><td style="font-family:monospace;font-size:12px">@'+u.usuario+'</td><td><span style="padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;background:'+(isAdmin?'#fef9c3':'#bee3f8')+';color:'+(isAdmin?'#854d0e':'#2b6cb0')+'">'+(isAdmin?'Administrador':'Vendedor')+'</span></td><td>'+(u.ativo!==false?'<span class="badge bg-green">Ativo</span>':'<span class="badge bg-gray">Inativo</span>')+'</td><td style="display:flex;gap:5px"><button class="btn btn-sm btn-s" onclick="abrirEditarUsuario(\''+u.id+'\')">✏️ Editar</button>'+(u.usuario!=='admin'?'<button class="btn btn-sm btn-d" onclick="excluirUsuario(\''+u.id+'\')">✕</button>':'')+'</td></tr>';
-  }).join('');
-  return '<div class="sh"><h2>🔑 Usuários do Sistema</h2><button class="btn btn-p" onclick="abrirNovoUsuario()">+ Novo Usuário</button></div>'
-    +'<div class="alert-banner ab-info" style="margin-bottom:16px">Os usuários <b>admin</b> e <b>vendedor</b> são padrão. Você pode adicionar mais e alterar senhas.</div>'
-    +'<div class="card tw"><table class="zebra"><thead><tr><th>Nome</th><th>Usuário</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
-    +'<div class="card" style="margin-top:16px;max-width:520px"><div class="card-title">Permissões por Perfil</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px;font-size:13px"><div><div style="font-weight:700;color:var(--text);margin-bottom:8px">👑 Administrador</div><div style="color:var(--green)">✓ Acesso total</div><div style="color:var(--green)">✓ Financeiro e DRE</div><div style="color:var(--green)">✓ Estoque e Relatórios</div><div style="color:var(--green)">✓ Configurações</div><div style="color:var(--green)">✓ Gerenciar usuários</div></div><div><div style="font-weight:700;color:#2b6cb0;margin-bottom:8px">🧑‍💼 Vendedor</div><div style="color:var(--green)">✓ Dashboard</div><div style="color:var(--green)">✓ Orçamentos e Agenda</div><div style="color:var(--green)">✓ Vendas, OS, Clientes</div><div style="color:var(--red)">✗ Financeiro / DRE</div><div style="color:var(--red)">✗ Estoque / Config</div></div></div></div>';
+  var html='<div class="sh"><h2>🔑 Usuários do Sistema</h2><button class="btn btn-p" onclick="abrirNovoUsuario()">+ Novo Usuário</button></div>'
+    +'<div class="alert-banner ab-info" style="margin-bottom:16px">Usuários vinculados à sua conta. Login é feito pelo <b>e-mail</b> cadastrado.</div>'
+    +'<div class="card tw" id="usuarios-tabela"><div style="text-align:center;padding:20px;color:var(--text3)">Carregando...</div></div>'
+    +'<div class="card" style="margin-top:16px;max-width:520px"><div class="card-title">Permissões por Perfil</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px;font-size:13px"><div><div style="font-weight:700;color:var(--text);margin-bottom:8px">👑 Administrador</div><div style="color:var(--green)">✓ Acesso total</div><div style="color:var(--green)">✓ Financeiro e DRE</div><div style="color:var(--green)">✓ Estoque e Relatórios</div><div style="color:var(--green)">✓ Configurações</div><div style="color:var(--green)">✓ Gerenciar usuários</div></div><div><div style="font-weight:700;color:#2b6cb0;margin-bottom:8px">🧑 Vendedor</div><div style="color:var(--green)">✓ Dashboard</div><div style="color:var(--green)">✓ Orçamentos e Agenda</div><div style="color:var(--green)">✓ Vendas, OS, Clientes</div><div style="color:var(--red)">✗ Financeiro / DRE</div><div style="color:var(--red)">✗ Estoque / Config</div></div></div></div>';
+  setTimeout(function(){
+    getUsuariosSupabase(function(users){
+      var tabela=document.getElementById('usuarios-tabela');
+      if(!tabela)return;
+      var rows=users.map(function(u){
+        var isAdmin=u.perfil==='admin';
+        var login=u.email||u.usuario||'-';
+        return '<tr><td style="font-weight:600">'+u.nome+'</td>'
+          +'<td style="font-size:12px">'+login+'</td>'
+          +'<td><span style="padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;background:'+(isAdmin?'#fef9c3':'#bee3f8')+';color:'+(isAdmin?'#854d0e':'#2b6cb0')+'">'+(isAdmin?'Administrador':'Vendedor')+'</span></td>'
+          +'<td>'+(u.ativo!==false?'<span class="badge bg-green">Ativo</span>':'<span class="badge bg-gray">Inativo</span>')+'</td>'
+          +'<td style="display:flex;gap:5px">'
+          +'<button class="btn btn-sm btn-s" onclick="abrirEditarUsuario(''+u.id+'')">✏️ Editar</button>'
+          +(login!=='admin'?'<button class="btn btn-sm btn-d" onclick="excluirUsuario(''+u.id+'')">✕</button>':'')
+          +'</td></tr>';
+      }).join('');
+      tabela.innerHTML='<table class="zebra"><thead><tr><th>Nome</th><th>E-mail (login)</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead><tbody>'+(rows||'<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text3)">Nenhum usuário</td></tr>')+'</tbody></table>';
+    });
+  },100);
+  return html;
 }
 
 function abrirNovoUsuario(){
-  openModal('Novo Usuário','<div class="fg-grid fg-2"><div class="fg" style="grid-column:1/-1"><label>Nome Completo</label><input type="text" id="nu-nome" placeholder="Ex: João Silva"></div><div class="fg"><label>Usuário (login)</label><input type="text" id="nu-usr" placeholder="Ex: joao"></div><div class="fg"><label>Perfil</label><select id="nu-perf"><option value="vendedor">Vendedor</option><option value="admin">Administrador</option></select></div><div class="fg"><label>Senha</label><input type="password" id="nu-pwd" placeholder="Mínimo 4 caracteres"></div><div class="fg"><label>Confirmar Senha</label><input type="password" id="nu-pwd2" placeholder="Repita a senha"></div></div><div class="mf"><button class="btn btn-g" onclick="closeModal()">Cancelar</button><button class="btn btn-p" onclick="salvarNovoUsuario()">Criar Usuário</button></div>');
+  openModal('Novo Usuário',
+    '<div class="fg-grid fg-2">'
+    +'<div class="fg" style="grid-column:1/-1"><label>Nome Completo</label><input type="text" id="nu-nome" placeholder="Ex: Maria Silva"></div>'
+    +'<div class="fg" style="grid-column:1/-1"><label>E-mail (será o login)</label><input type="email" id="nu-email" placeholder="vendedor@email.com"></div>'
+    +'<div class="fg"><label>Perfil</label><select id="nu-perf"><option value="vendedor">Vendedor</option><option value="admin">Administrador</option></select></div>'
+    +'<div class="fg"><label>Senha (mín. 6 caracteres)</label><input type="password" id="nu-pwd" placeholder="••••••••"></div>'
+    +'<div class="fg" style="grid-column:1/-1"><label>Confirmar Senha</label><input type="password" id="nu-pwd2" placeholder="••••••••"></div>'
+    +'</div>'
+    +'<div id="nu-erro" style="color:var(--red);font-size:12px;margin-top:8px;display:none"></div>'
+    +'<div class="mf"><button class="btn btn-g" onclick="closeModal()">Cancelar</button>'
+    +'<button class="btn btn-p" id="nu-btn" onclick="salvarNovoUsuario()">Criar Usuário</button></div>');
 }
+
 function salvarNovoUsuario(){
-  var nome=v('nu-nome'),usr=v('nu-usr'),pwd=v('nu-pwd'),pwd2=v('nu-pwd2'),perf=v('nu-perf');
-  if(!nome||!usr||!pwd){toast('Preencha todos os campos','warning');return;}
-  if(pwd!==pwd2){toast('As senhas não coincidem','danger');return;}
-  if(pwd.length<4){toast('Senha deve ter ao menos 4 caracteres','warning');return;}
-  var users=getUsuarios();
-  if(users.find(function(u){return u.usuario===usr;})){toast('Usuário já existe','danger');return;}
-  users.push({id:uid(),nome:nome,usuario:usr,senha:pwd,perfil:perf,ativo:true});
-  S('gt_usuarios',users);closeModal();toast('Usuário criado!','success');render('usuarios');
+  var nome=v('nu-nome'),email=(v('nu-email')||'').trim().toLowerCase();
+  var pwd=v('nu-pwd'),pwd2=v('nu-pwd2'),perf=v('nu-perf');
+  var erro=document.getElementById('nu-erro');
+  var btn=document.getElementById('nu-btn');
+  erro.style.display='none';
+  if(!nome||!email||!pwd){erro.textContent='Preencha todos os campos';erro.style.display='block';return;}
+  if(pwd!==pwd2){erro.textContent='As senhas não coincidem';erro.style.display='block';return;}
+  if(pwd.length<6){erro.textContent='Senha deve ter ao menos 6 caracteres';erro.style.display='block';return;}
+  btn.textContent='Criando...';btn.disabled=true;
+  if(_supabase&&_tenantId){
+    // Verificar se e-mail já existe
+    _supabase.from('usuarios').select('id').eq('email',email).then(function(res){
+      if(res.data&&res.data.length>0){
+        erro.textContent='E-mail já cadastrado';erro.style.display='block';
+        btn.textContent='Criar Usuário';btn.disabled=false;return;
+      }
+      // Gerar login sequencial e criar no Supabase
+      gerarLoginSequencial(perf, function(loginGerado){
+        var senhaForte=gerarSenhaForte();
+        _supabase.from('usuarios').insert([{
+          tenant_id:_tenantId,nome:nome,email:email,
+          usuario:loginGerado,login_padrao:loginGerado,
+          senha_hash:btoa(senhaForte),perfil:perf,ativo:true,
+          primeiro_acesso:true
+        }]).then(function(res2){
+          btn.textContent='Criar Usuário';btn.disabled=false;
+          if(res2.error){erro.textContent='Erro: '+res2.error.message;erro.style.display='block';return;}
+          // Enviar e-mail com credenciais
+          enviarEmailBoasVindas(nome, email, loginGerado, senhaForte, _sessaoSaas?_sessaoSaas.tenantNome:'');
+          closeModal();
+          toast('Usuário criado! Login: '+loginGerado+' — credenciais enviadas por e-mail 📧','success');
+          render('usuarios');
+        });
+      });
+    });
+  } else {
+    // Fallback local
+    var users=getUsuarios();
+    users.push({id:uid(),nome:nome,email:email,usuario:email,senha:pwd,senha_hash:btoa(pwd),perfil:perf,ativo:true});
+    S('gt_usuarios',users);
+    btn.textContent='Criar Usuário';btn.disabled=false;
+    closeModal();toast('Usuário criado! Login: '+email,'success');render('usuarios');
+  }
 }
 function abrirEditarUsuario(id){
-  var users=getUsuarios();var u=users.find(function(x){return x.id===id;});if(!u)return;
-  var isAdmin=u.usuario==='admin';
-  openModal('Editar Usuário','<div class="fg-grid fg-2"><div class="fg" style="grid-column:1/-1"><label>Nome Completo</label><input type="text" id="eu-nome" value="'+u.nome+'"></div><div class="fg"><label>Usuário (login)</label><input type="text" id="eu-usr" value="'+u.usuario+'" '+(isAdmin?'readonly':'')+'></div><div class="fg"><label>Perfil</label><select id="eu-perf" '+(isAdmin?'disabled':'')+'><option value="vendedor" '+(u.perfil==='vendedor'?'selected':'')+'>Vendedor</option><option value="admin" '+(u.perfil==='admin'?'selected':'')+'>Administrador</option></select></div><div class="fg"><label>Nova Senha (em branco = manter)</label><input type="password" id="eu-pwd" placeholder="Nova senha"></div><div class="fg"><label>Confirmar Nova Senha</label><input type="password" id="eu-pwd2"></div><div class="fg"><label>Status</label><select id="eu-ativo"><option value="true" '+(u.ativo!==false?'selected':'')+'>Ativo</option><option value="false" '+(u.ativo===false?'selected':'')+'>Inativo</option></select></div></div><div class="mf"><button class="btn btn-g" onclick="closeModal()">Cancelar</button><button class="btn btn-p" onclick="salvarEdicaoUsuario(\''+id+'\')">Salvar</button></div>');
+  var buscarEEditar=function(users){
+    var u=users.find(function(x){return x.id===id;});
+    if(!u){toast('Usuário não encontrado','warning');return;}
+    var login=u.email||u.usuario||'';
+    var isAdmin=login==='admin';
+    openModal('Editar Usuário',
+      '<div class="fg-grid fg-2">'
+      +'<div class="fg" style="grid-column:1/-1"><label>Nome Completo</label><input type="text" id="eu-nome" value="'+u.nome+'"></div>'
+      +'<div class="fg" style="grid-column:1/-1"><label>E-mail (login)</label><input type="text" id="eu-email" value="'+login+'" '+(isAdmin?'readonly':'')+'></div>'
+      +'<div class="fg"><label>Perfil</label><select id="eu-perf" '+(isAdmin?'disabled':'')+'><option value="vendedor" '+(u.perfil==="vendedor"?"selected":"")+'>Vendedor</option><option value="admin" '+(u.perfil==="admin"?"selected":"")+'>Administrador</option></select></div>'
+      +'<div class="fg"><label>Nova Senha (vazio = manter)</label><input type="password" id="eu-pwd" placeholder="Nova senha"></div>'
+      +'<div class="fg" style="grid-column:1/-1"><label>Confirmar Nova Senha</label><input type="password" id="eu-pwd2"></div>'
+      +'<div class="fg"><label>Status</label><select id="eu-ativo"><option value="true" '+(u.ativo!==false?"selected":"")+'>Ativo</option><option value="false" '+(u.ativo===false?"selected":"")+'>Inativo</option></select></div>'
+      +'</div>'
+      +'<div id="eu-erro" style="color:var(--red);font-size:12px;margin-top:8px;display:none"></div>'
+      +'<div class="mf"><button class="btn btn-g" onclick="closeModal()">Cancelar</button>'
+      +'<button class="btn btn-p" onclick="salvarEdicaoUsuario(''+id+'')">Salvar</button></div>');
+  };
+  getUsuariosSupabase(buscarEEditar);
 }
+
 function salvarEdicaoUsuario(id){
-  var users=getUsuarios();var i=users.findIndex(function(u){return u.id===id;});if(i<0)return;
   var pwd=v('eu-pwd'),pwd2=v('eu-pwd2');
-  if(pwd&&pwd!==pwd2){toast('As senhas não coincidem','danger');return;}
-  if(pwd&&pwd.length<4){toast('Senha deve ter ao menos 4 caracteres','warning');return;}
-  users[i].nome=v('eu-nome');
-  if(users[i].usuario!=='admin'){users[i].usuario=v('eu-usr');users[i].perfil=v('eu-perf');}
-  if(pwd)users[i].senha=pwd;
-  users[i].ativo=v('eu-ativo')==='true';
-  S('gt_usuarios',users);closeModal();toast('Usuário atualizado!','success');render('usuarios');
+  var erro=document.getElementById('eu-erro');
+  if(erro)erro.style.display='none';
+  if(pwd&&pwd!==pwd2){if(erro){erro.textContent='As senhas não coincidem';erro.style.display='block';}return;}
+  if(pwd&&pwd.length<6){if(erro){erro.textContent='Senha deve ter ao menos 6 caracteres';erro.style.display='block';}return;}
+  var upd={nome:v('eu-nome'),perfil:v('eu-perf'),ativo:v('eu-ativo')==='true'};
+  var novoEmail=(v('eu-email')||'').trim().toLowerCase();
+  if(novoEmail&&novoEmail!=='admin') upd.email=novoEmail;
+  if(pwd){upd.senha_hash=btoa(pwd);}
+  if(_supabase&&_tenantId){
+    _supabase.from('usuarios').update(upd).eq('id',id).then(function(res){
+      if(res.error){toast('Erro: '+res.error.message,'danger');return;}
+      closeModal();toast('Usuário atualizado!','success');render('usuarios');
+    });
+  } else {
+    var users=getUsuarios();var i=users.findIndex(function(u){return u.id===id;});
+    if(i>-1){users[i]=Object.assign({},users[i],upd);S('gt_usuarios',users);}
+    closeModal();toast('Usuário atualizado!','success');render('usuarios');
+  }
 }
+
 function excluirUsuario(id){
-  var users=getUsuarios();var u=users.find(function(x){return x.id===id;});
-  if(!u||u.usuario==='admin'){toast('Não é possível excluir o admin padrão','warning');return;}
-  if(!confirm('Excluir usuário "'+u.nome+'"?'))return;
-  S('gt_usuarios',users.filter(function(x){return x.id!==id;}));
-  toast('Usuário excluído','danger');render('usuarios');
+  if(!confirm('Excluir este usuário?'))return;
+  if(_supabase&&_tenantId){
+    _supabase.from('usuarios').delete().eq('id',id).eq('tenant_id',_tenantId).then(function(res){
+      if(res.error){toast('Erro: '+res.error.message,'danger');return;}
+      toast('Usuário excluído','danger');render('usuarios');
+    });
+  } else {
+    var users=getUsuarios().filter(function(u){return u.id!==id;});
+    S('gt_usuarios',users);toast('Usuário excluído','danger');render('usuarios');
+  }
 }
+
 
 // ============================================================
 // INIT
@@ -5113,6 +5261,129 @@ function carregarCfgNF(){
   el = document.getElementById('cfg-nf-ambiente'); if(el) el.value = cfg.ambiente||'homologacao';
 }
 
+function abrirRecuperarSenha(){
+  document.getElementById('login-screen').classList.remove('show');
+  document.getElementById('recuperar-screen').style.display='flex';
+  setTimeout(function(){var el=document.getElementById('rec-email');if(el)el.focus();},150);
+}
+
+function voltarLoginRecuperacao(){
+  document.getElementById('recuperar-screen').style.display='none';
+  document.getElementById('rec-step1').style.display='';
+  document.getElementById('rec-step2').style.display='none';
+  document.getElementById('rec-erro').classList='login-err';
+  document.getElementById('login-screen').classList.add('show');
+}
+
+function gerarSenhaTemporaria(){
+  var chars='ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  var senha='';
+  for(var i=0;i<8;i++) senha+=chars.charAt(Math.floor(Math.random()*chars.length));
+  return senha;
+}
+
+function gerarSenhaForte(){
+  var upper='ABCDEFGHJKMNPQRSTUVWXYZ';
+  var lower='abcdefghjkmnpqrstuvwxyz';
+  var nums='23456789';
+  var syms='@#!';
+  var all=upper+lower+nums+syms;
+  var senha=upper.charAt(Math.floor(Math.random()*upper.length))
+    +lower.charAt(Math.floor(Math.random()*lower.length))
+    +nums.charAt(Math.floor(Math.random()*nums.length))
+    +syms.charAt(Math.floor(Math.random()*syms.length));
+  for(var i=0;i<6;i++) senha+=all.charAt(Math.floor(Math.random()*all.length));
+  // Embaralhar
+  return senha.split('').sort(function(){return Math.random()-0.5;}).join('');
+}
+
+function gerarLoginSequencial(perfil, callback){
+  if(!_supabase){
+    // Fallback local
+    var num=parseInt(localStorage.getItem('gt_seq_'+(perfil==='admin'?'adm':'vnd'))||'0')+1;
+    localStorage.setItem('gt_seq_'+(perfil==='admin'?'adm':'vnd'),num);
+    var login='gestotica.'+(perfil==='admin'?'adm':'vnd')+String(num).padStart(4,'0');
+    callback(login, num);
+    return;
+  }
+  _supabase.from('login_sequencia').select('*').single().then(function(res){
+    if(!res.data){callback('gestotica.adm0001',1);return;}
+    var seq=res.data;
+    var campo=perfil==='admin'?'ultimo_adm':'ultimo_vnd';
+    var novo=(seq[campo]||0)+1;
+    var prefix=perfil==='admin'?'adm':'vnd';
+    var login='gestotica.'+prefix+String(novo).padStart(4,'0');
+    // Atualizar sequência
+    var upd={};upd[campo]=novo;
+    _supabase.from('login_sequencia').update(upd).eq('id',seq.id).then(function(){
+      callback(login, novo);
+    });
+  }).catch(function(){
+    callback('gestotica.adm0001',1);
+  });
+}
+
+function enviarEmailBoasVindas(nome, email, login, senha, nomeOtica){
+  initEmailJS();
+  emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE_BOASVINDAS, {
+    to_name: nome,
+    to_email: email,
+    login_gerado: login,
+    nova_senha: senha,
+    nome_otica: nomeOtica||'Gestótica'
+  }).then(function(){
+    console.log('E-mail boas-vindas enviado para '+email);
+  }).catch(function(e){
+    console.warn('Erro ao enviar boas-vindas:',e);
+  });
+}
+
+function enviarRecuperacao(){
+  var email=(document.getElementById('rec-email').value||'').trim().toLowerCase();
+  var btn=document.getElementById('rec-btn');
+  var erro=document.getElementById('rec-erro');
+  erro.style.display='none';
+  if(!email){erro.textContent='Digite seu e-mail';erro.style.display='block';return;}
+  btn.textContent='Enviando...';btn.disabled=true;
+  if(!_supabase){
+    erro.textContent='Sem conexão com o servidor';erro.style.display='block';
+    btn.textContent='Enviar senha temporária →';btn.disabled=false;return;
+  }
+  // Buscar usuário pelo e-mail
+  _supabase.from('usuarios').select('id,nome,email').eq('email',email).single().then(function(res){
+    if(!res.data){
+      erro.textContent='E-mail não encontrado no sistema';erro.style.display='block';
+      btn.textContent='Enviar senha temporária →';btn.disabled=false;return;
+    }
+    var user=res.data;
+    var novaSenha=gerarSenhaTemporaria();
+    // Atualizar senha no banco
+    _supabase.from('usuarios').update({senha_hash:btoa(novaSenha)}).eq('id',user.id).then(function(upd){
+      if(upd.error){
+        erro.textContent='Erro ao resetar senha. Tente novamente.';erro.style.display='block';
+        btn.textContent='Enviar senha temporária →';btn.disabled=false;return;
+      }
+      // Enviar e-mail via EmailJS
+      initEmailJS();
+      emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE_RECUPERACAO, {
+        to_name: user.nome||'Usuário',
+        to_email: email,
+        nova_senha: novaSenha
+      }).then(function(){
+        btn.textContent='Enviar senha temporária →';btn.disabled=false;
+        document.getElementById('rec-step1').style.display='none';
+        document.getElementById('rec-step2').style.display='';
+      }).catch(function(e){
+        erro.textContent='Erro ao enviar e-mail: '+( e.text||'verifique sua conexão');erro.style.display='block';
+        btn.textContent='Enviar senha temporária →';btn.disabled=false;
+      });
+    });
+  }).catch(function(){
+    erro.textContent='Erro ao buscar usuário. Tente novamente.';erro.style.display='block';
+    btn.textContent='Enviar senha temporária →';btn.disabled=false;
+  });
+}
+
 function loginUnificado(){
   var u=(document.getElementById('lg-user').value||'').trim();
   var p=(document.getElementById('lg-pass').value||'');
@@ -5122,7 +5393,11 @@ function loginUnificado(){
   if(!u||!p){if(err)err.classList.add('show');return;}
   if(btn){btn.textContent='Entrando...';btn.disabled=true;}
   if(_supabase){
-    _supabase.from('usuarios').select('*,tenants(*)').eq('email',u).single().then(function(res){
+    // Buscar por email OU por login_padrao (ex: gestotica.adm0001)
+    var query=u.includes('@')
+      ?_supabase.from('usuarios').select('*,tenants(*)').eq('email',u).single()
+      :_supabase.from('usuarios').select('*,tenants(*)').eq('usuario',u).single();
+    query.then(function(res){
       if(btn){btn.textContent='Entrar →';btn.disabled=false;}
       if(res.data && res.data.senha_hash && res.data.senha_hash.trim()===btoa(p).trim()){
         var user=res.data;
@@ -5216,15 +5491,30 @@ function cadastrarOtica(){
           nome_otica: nomeOtica,
           telefone: tel
         }]).then(function(){
-          // Login automático após cadastro
-          _tenantId=tenant.id;
-          _sessaoSaas={id:email,nome:nomeResp,email:email,perfil:'admin',
-            tenantId:tenant.id,tenantNome:nomeOtica,plano:plano};
-          localStorage.setItem('gt_sessao_saas',JSON.stringify(_sessaoSaas));
-          setSessao({id:email,nome:nomeResp,usuario:email,perfil:'admin',ativo:true});
-          document.getElementById('cadastro-screen').classList.remove('show');
-          toast('Bem-vindo(a) ao Gestótica, '+nomeResp+'! 🎉','success');
-          iniciarSistema();
+          // Gerar login sequencial e enviar e-mail de boas-vindas
+          gerarLoginSequencial('admin', function(loginGerado){
+            var senhaForte=gerarSenhaForte();
+            // Atualizar usuario com login gerado e senha forte
+            _supabase.from('usuarios').update({
+              usuario: loginGerado,
+              senha_hash: btoa(senhaForte),
+              login_padrao: loginGerado,
+              primeiro_acesso: true
+            }).eq('tenant_id',tenant.id).then(function(){
+              // Enviar e-mail de boas-vindas com credenciais
+              enviarEmailBoasVindas(nomeResp, email, loginGerado, senhaForte, nomeOtica);
+            });
+            // Login automático após cadastro
+            _tenantId=tenant.id;
+            _sessaoSaas={id:email,nome:nomeResp,email:email,perfil:'admin',
+              tenantId:tenant.id,tenantNome:nomeOtica,plano:plano,
+              loginPadrao:loginGerado};
+            localStorage.setItem('gt_sessao_saas',JSON.stringify(_sessaoSaas));
+            setSessao({id:email,nome:nomeResp,usuario:loginGerado,email:email,perfil:'admin',ativo:true});
+            document.getElementById('cadastro-screen').classList.remove('show');
+            toast('Bem-vindo(a) ao Gestótica! Login: '+loginGerado+' — verifique seu e-mail 📧','success');
+            iniciarSistema();
+          });
         });
       });
     });
