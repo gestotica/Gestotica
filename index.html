@@ -1119,16 +1119,17 @@ var TABELA_MAP={
   'gt_metas':'metas'
 };
 
-// Carregar dados do Supabase para localStorage (sync)
+// Carregar dados do Supabase para localStorage (sync via jsonb)
 function syncDoSupabase(callback){
   if(!_supabase||!_tenantId){if(callback)callback();return;}
   var tabelas=Object.keys(TABELA_MAP);
   var done=0;
   tabelas.forEach(function(key){
     var tabela=TABELA_MAP[key];
-    _supabase.from(tabela).select('*').eq('tenant_id',_tenantId).then(function(res){
+    _supabase.from(tabela).select('dados').eq('tenant_id',_tenantId).then(function(res){
       if(res.data&&res.data.length>0){
-        localStorage.setItem(key,JSON.stringify(res.data));
+        var items=res.data.map(function(row){return row.dados;}).filter(Boolean);
+        if(items.length>0) localStorage.setItem(key,JSON.stringify(items));
       }
       done++;
       if(done===tabelas.length&&callback)callback();
@@ -1139,18 +1140,19 @@ function syncDoSupabase(callback){
   });
 }
 
-// Salvar no Supabase após salvar no localStorage
+// Salvar no Supabase após salvar no localStorage (usando jsonb)
 function syncParaSupabase(key, dados){
   if(!_supabase||!_tenantId)return;
   var tabela=TABELA_MAP[key];
   if(!tabela)return;
-  // Adicionar tenant_id em todos os registros
   var arr=Array.isArray(dados)?dados:[dados];
-  arr.forEach(function(item){
-    if(!item.tenant_id) item.tenant_id=_tenantId;
+  var rows=arr.map(function(item){
+    var id=item.id||(Date.now().toString(36)+Math.random().toString(36).substr(2,5));
+    if(!item.id) item.id=id;
+    return {id:id, tenant_id:_tenantId, dados:item};
   });
-  _supabase.from(tabela).upsert(arr,{onConflict:'id'}).then(function(res){
-    if(res.error)console.warn('Sync error:',res.error.message);
+  _supabase.from(tabela).upsert(rows,{onConflict:'id'}).then(function(res){
+    if(res.error)console.warn('Sync error ['+tabela+']:',res.error.message);
   });
 }
 
