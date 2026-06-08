@@ -5360,6 +5360,33 @@ function emitirNF2(){
 }
 
 function loginLocalUnificado(u,p,err){
+  // Sempre tenta Supabase primeiro
+  if(_supabase){
+    _supabase.from('usuarios').select('*,tenants(*)').eq('email',u).single().then(function(res){
+      if(res.data && res.data.senha_hash && res.data.senha_hash.trim()===btoa(p).trim()){
+        var user=res.data;
+        var tenant=user.tenants;
+        _tenantId=tenant?tenant.id:null;
+        _sessaoSaas={id:user.id,nome:user.nome,email:user.email,perfil:user.perfil,
+          tenantId:_tenantId,tenantNome:tenant?tenant.nome:'',plano:tenant?tenant.plano:'basico'};
+        localStorage.setItem('gt_sessao_saas',JSON.stringify(_sessaoSaas));
+        setSessao({id:user.id,nome:user.nome,usuario:user.email,perfil:user.perfil,ativo:true});
+        toast('Conectado à nuvem: '+( tenant?tenant.nome:''),'success');
+        syncDoSupabase(function(){
+          document.getElementById('login-screen').classList.remove('show');
+          iniciarSistema();
+        });
+      } else {
+        // Fallback local apenas se Supabase falhar
+        loginFallbackLocal(u,p,err);
+      }
+    }).catch(function(){ loginFallbackLocal(u,p,err); });
+  } else {
+    loginFallbackLocal(u,p,err);
+  }
+}
+
+function loginFallbackLocal(u,p,err){
   var usuarios=getUsuarios(),user=null;
   for(var i=0;i<usuarios.length;i++){if(usuarios[i].usuario===u&&usuarios[i].senha===p&&usuarios[i].ativo!==false){user=usuarios[i];break;}}
   if(!user){
@@ -5368,35 +5395,7 @@ function loginLocalUnificado(u,p,err){
   }
   if(!user){if(err)err.classList.add('show');document.getElementById('lg-pass').value='';return;}
   setSessao(user);
-
-  // Tentar buscar tenant no Supabase pelo email
-  if(_supabase){
-    _supabase.from('usuarios').select('*,tenants(*)').eq('email',u).single().then(function(res){
-      if(res.data && res.data.tenants){
-        var tenant = res.data.tenants;
-        _tenantId = tenant.id;
-        _sessaoSaas = {id:res.data.id,nome:res.data.nome,email:u,perfil:res.data.perfil,
-          tenantId:tenant.id,tenantNome:tenant.nome,plano:tenant.plano};
-        localStorage.setItem('gt_sessao_saas',JSON.stringify(_sessaoSaas));
-        console.log('Tenant carregado:', tenant.nome, '| ID:', tenant.id);
-        syncDoSupabase(function(){
-          document.getElementById('login-screen').classList.remove('show');
-          iniciarSistema();
-          toast('Conectado à nuvem: '+tenant.nome,'success');
-        });
-      } else {
-        // Sem tenant no Supabase — modo local
-        console.warn('Nenhum tenant encontrado no Supabase para:', u);
-        document.getElementById('login-screen').classList.remove('show');
-        iniciarSistema();
-      }
-    }).catch(function(){
-      document.getElementById('login-screen').classList.remove('show');
-      iniciarSistema();
-    });
-  } else {
-    document.getElementById('login-screen').classList.remove('show');
-    iniciarSistema();
-  }
+  document.getElementById('login-screen').classList.remove('show');
+  iniciarSistema();
 }
 </script></body></html>
