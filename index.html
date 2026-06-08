@@ -752,7 +752,7 @@ function excluirGarantia(id){
         <input type="password" id="lg-pass" placeholder="••••••••" autocomplete="current-password"
           onkeydown="if(event.key==='Enter')fazerLogin()">
       </div>
-      <button class="login-btn" onclick="loginUnificado()">Entrar →</button>
+      <button class="login-btn" onmousedown="event.preventDefault()" onclick="loginUnificado()">Entrar →</button>
       <div class="login-err" id="login-error">Usuário ou senha incorretos.</div>
       <div class="cad-link" style="margin-top:14px">Não tem conta? <a onclick="abrirCadastro()" style="color:var(--accent);cursor:pointer;">Criar grátis</a></div>
 
