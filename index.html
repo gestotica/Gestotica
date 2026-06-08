@@ -915,9 +915,7 @@ function excluirGarantia(id){
   </div>
 
   <div style="padding:6px 12px 10px">
-    <input type="text" id="sb-search" 
-      placeholder="🔍 Buscar módulo..." 
-      oninput="buscarModulo(this.value)"
+    <input type="text" id="sb-search" placeholder="🔍 Buscar módulo..." oninput="buscarModulo(this.value)"
       style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:8px;padding:8px 10px;font-size:12px;outline:none;">
   </div>
 
@@ -929,212 +927,109 @@ function excluirGarantia(id){
   </div>
 
   <div class="sb-section">
-    <div class="sb-section-label" onclick="toggleSbSection(this)">
-    <span class="sb-section-key">Atendimento</span>
-  <div class="sb-section-items">
-    <i class="sb-toggle-icon">▾</i>
-  </div>
-    <div class="ni" onclick="nav('orcamentos')" data-page="orcamentos">
-      <span class="ic">📄</span> Orçamentos
-    </div>
-    <div class="ni" onclick="nav('agendamentos')" data-page="agendamentos">
-      <span class="ic">📅</span> Agendamentos
-  </div>
+    <div class="sb-section-label" onclick="toggleSbSection(this)"><span class="sb-section-key">Atendimento</span><i class="sb-toggle-icon">▾</i></div>
+    <div class="sb-section-items">
+      <div class="ni" onclick="nav('orcamentos')" data-page="orcamentos"><span class="ic">📄</span> Orçamentos</div>
+      <div class="ni" onclick="nav('agendamentos')" data-page="agendamentos"><span class="ic">📅</span> Agendamentos</div>
     </div>
   </div>
 
   <div class="sb-section">
-    <div class="sb-section-label" onclick="toggleSbSection(this)">
-    <span class="sb-section-key">Caixa & Vendas</span>
-  <div class="sb-section-items">
-    <i class="sb-toggle-icon">▾</i>
-  </div>
-    <div class="ni" onclick="nav('caixa')" data-page="caixa">
-      <span class="ic">🏦</span> Caixa
-      <span class="bdg" id="bdg-caixa" style="display:none">●</span>
-    </div>
-    <div class="ni" onclick="nav('nova-venda')" data-page="nova-venda">
-      <span class="ic">🛒</span> Nova Venda
-    </div>
-    <div class="ni" onclick="nav('pedidos')" data-page="pedidos">
-      <span class="ic">📝</span> Pedidos
-    </div>
-    <div class="ni" onclick="nav('trocas')" data-page="trocas">
-      <span class="ic">🔄</span> Trocas / Dev.
-  </div>
+    <div class="sb-section-label" onclick="toggleSbSection(this)"><span class="sb-section-key">Caixa & Vendas</span><i class="sb-toggle-icon">▾</i></div>
+    <div class="sb-section-items">
+      <div class="ni" onclick="nav('caixa')" data-page="caixa"><span class="ic">🏦</span> Caixa<span class="bdg" id="bdg-caixa" style="display:none">●</span></div>
+      <div class="ni" onclick="nav('nova-venda')" data-page="nova-venda"><span class="ic">🛒</span> Nova Venda</div>
+      <div class="ni" onclick="nav('pedidos')" data-page="pedidos"><span class="ic">📝</span> Pedidos</div>
+      <div class="ni" onclick="nav('trocas')" data-page="trocas"><span class="ic">🔄</span> Trocas / Dev.</div>
     </div>
   </div>
 
   <div class="sb-section">
-    <div class="sb-section-label" onclick="toggleSbSection(this)">
-    <span class="sb-section-key">OS & Lab</span>
-  <div class="sb-section-items">
-    <i class="sb-toggle-icon">▾</i>
-  </div>
-    <div class="ni" onclick="nav('nova-os')" data-page="nova-os">
-      <span class="ic">🔬</span> Nova OS
-    </div>
-    <div class="ni" onclick="nav('painel-os')" data-page="painel-os">
-      <span class="ic">📌</span> Painel OS
-      <span class="bdg" id="bdg-os" style="display:none">0</span>
-    </div>
-    <div class="ni" onclick="nav('historico-os')" data-page="historico-os">
-      <span class="ic">🕐</span> Histórico OS
-  </div>
+    <div class="sb-section-label" onclick="toggleSbSection(this)"><span class="sb-section-key">OS & Lab</span><i class="sb-toggle-icon">▾</i></div>
+    <div class="sb-section-items">
+      <div class="ni" onclick="nav('nova-os')" data-page="nova-os"><span class="ic">🔬</span> Nova OS</div>
+      <div class="ni" onclick="nav('painel-os')" data-page="painel-os"><span class="ic">📌</span> Painel OS<span class="bdg" id="bdg-os" style="display:none">0</span></div>
+      <div class="ni" onclick="nav('historico-os')" data-page="historico-os"><span class="ic">🕐</span> Histórico OS</div>
     </div>
   </div>
 
   <div class="sb-section">
-    <div class="sb-section-label" onclick="toggleSbSection(this)">
-    <span class="sb-section-key">Financeiro</span>
-  <div class="sb-section-items">
-    <i class="sb-toggle-icon">▾</i>
-  </div>
-    <div class="ni" onclick="nav('fluxo')" data-page="fluxo">
-      <span class="ic">💰</span> Fluxo de Caixa
-    </div>
-    <div class="ni" onclick="nav('pagar')" data-page="pagar">
-      <span class="ic">📤</span> Contas a Pagar
-    </div>
-    <div class="ni" onclick="nav('receber')" data-page="receber">
-      <span class="ic">📥</span> Contas a Receber
-    </div>
-    <div class="ni" onclick="nav('comissoes')" data-page="comissoes">
-      <span class="ic">💼</span> Comissões
-    </div>
-    <div class="ni" onclick="nav('dre')" data-page="dre">
-      <span class="ic">📊</span> DRE
-  </div>
+    <div class="sb-section-label" onclick="toggleSbSection(this)"><span class="sb-section-key">Financeiro</span><i class="sb-toggle-icon">▾</i></div>
+    <div class="sb-section-items">
+      <div class="ni" onclick="nav('fluxo')" data-page="fluxo"><span class="ic">💰</span> Fluxo de Caixa</div>
+      <div class="ni" onclick="nav('pagar')" data-page="pagar"><span class="ic">📤</span> Contas a Pagar</div>
+      <div class="ni" onclick="nav('receber')" data-page="receber"><span class="ic">📥</span> Contas a Receber</div>
+      <div class="ni" onclick="nav('comissoes')" data-page="comissoes"><span class="ic">💼</span> Comissões</div>
+      <div class="ni" onclick="nav('dre')" data-page="dre"><span class="ic">📊</span> DRE</div>
     </div>
   </div>
 
   <div class="sb-section">
-    <div class="sb-section-label" onclick="toggleSbSection(this)">
-    <span class="sb-section-key">Estoque</span>
-  <div class="sb-section-items">
-    <i class="sb-toggle-icon">▾</i>
-  </div>
-    <div class="ni" onclick="nav('produtos')" data-page="produtos">
-      <span class="ic">📦</span> Produtos
-    </div>
-    <div class="ni" onclick="nav('entrada')" data-page="entrada">
-      <span class="ic">➕</span> Entrada
-    </div>
-    <div class="ni" onclick="nav('notafiscal')" data-page="notafiscal">
-      <span class="ic">🧾</span> Nota Fiscal
-    </div>
-    <div class="ni" onclick="nav('garantias')" data-page="garantias">
-      <span class="ic">🛡️</span> Garantias
-    </div>
-    <div class="ni" onclick="nav('rel-estoque')" data-page="rel-estoque">
-      <span class="ic">📋</span> Rel. Estoque
-  </div>
+    <div class="sb-section-label" onclick="toggleSbSection(this)"><span class="sb-section-key">Estoque</span><i class="sb-toggle-icon">▾</i></div>
+    <div class="sb-section-items">
+      <div class="ni" onclick="nav('produtos')" data-page="produtos"><span class="ic">📦</span> Produtos</div>
+      <div class="ni" onclick="nav('entrada')" data-page="entrada"><span class="ic">➕</span> Entrada</div>
+      <div class="ni" onclick="nav('notafiscal')" data-page="notafiscal"><span class="ic">🧾</span> Nota Fiscal</div>
+      <div class="ni" onclick="nav('garantias')" data-page="garantias"><span class="ic">🛡️</span> Garantias</div>
+      <div class="ni" onclick="nav('rel-estoque')" data-page="rel-estoque"><span class="ic">📋</span> Rel. Estoque</div>
     </div>
   </div>
 
   <div class="sb-section">
-    <div class="sb-section-label" onclick="toggleSbSection(this)">
-    <span class="sb-section-key">Recebimentos</span>
-  <div class="sb-section-items">
-    <i class="sb-toggle-icon">▾</i>
-  </div>
-    <div class="ni" onclick="nav('crediario')" data-page="crediario">
-      <span class="ic">💳</span> Crediário
-    </div>
-    <div class="ni" onclick="nav('analise-credito')" data-page="analise-credito">
-      <span class="ic">📊</span> Análise de Crédito
-    </div>
-    <div class="ni" onclick="nav('cobrancas')" data-page="cobrancas">
-      <span class="ic">💬</span> Cobranças
-      <span class="bdg" id="bdg-cobrancas" style="display:none">0</span>
-  </div>
+    <div class="sb-section-label" onclick="toggleSbSection(this)"><span class="sb-section-key">Recebimentos</span><i class="sb-toggle-icon">▾</i></div>
+    <div class="sb-section-items">
+      <div class="ni" onclick="nav('crediario')" data-page="crediario"><span class="ic">💳</span> Crediário</div>
+      <div class="ni" onclick="nav('analise-credito')" data-page="analise-credito"><span class="ic">📊</span> Análise de Crédito</div>
+      <div class="ni" onclick="nav('cobrancas')" data-page="cobrancas"><span class="ic">💬</span> Cobranças<span class="bdg" id="bdg-cobrancas" style="display:none">0</span></div>
     </div>
   </div>
 
   <div class="sb-section">
-    <div class="sb-section-label" onclick="toggleSbSection(this)">
-    <span class="sb-section-key">Receituário</span>
-  <div class="sb-section-items">
-    <i class="sb-toggle-icon">▾</i>
-  </div>
-    <div class="ni" onclick="nav('receitas-vencidas')" data-page="receitas-vencidas">
-      <span class="ic">👓</span> Receitas
-      <span class="bdg" id="bdg-receitas" style="display:none">0</span>
-  </div>
+    <div class="sb-section-label" onclick="toggleSbSection(this)"><span class="sb-section-key">Receituário</span><i class="sb-toggle-icon">▾</i></div>
+    <div class="sb-section-items">
+      <div class="ni" onclick="nav('receitas-vencidas')" data-page="receitas-vencidas"><span class="ic">👓</span> Receitas<span class="bdg" id="bdg-receitas" style="display:none">0</span></div>
     </div>
   </div>
 
   <div class="sb-section">
-    <div class="sb-section-label" onclick="toggleSbSection(this)">
-    <span class="sb-section-key">Ferramentas</span>
-  <div class="sb-section-items">
-    <i class="sb-toggle-icon">▾</i>
-  </div>
-    <div class="ni" onclick="nav('etiquetas')" data-page="etiquetas">
-      <span class="ic">🏷️</span> Etiquetas
-    </div>
-    <div class="ni" onclick="nav('importar-xml')" data-page="importar-xml">
-      <span class="ic">📦</span> Importar XML
-    </div>
-    <div class="ni" onclick="nav('importar-excel')" data-page="importar-excel">
-      <span class="ic">📊</span> Importar Excel
-    </div>
-    <div class="ni" onclick="ativarLeitorCodigo()" data-page="leitor">
-      <span class="ic">📷</span> Leitor de Código
-  </div>
+    <div class="sb-section-label" onclick="toggleSbSection(this)"><span class="sb-section-key">Ferramentas</span><i class="sb-toggle-icon">▾</i></div>
+    <div class="sb-section-items">
+      <div class="ni" onclick="nav('etiquetas')" data-page="etiquetas"><span class="ic">🏷️</span> Etiquetas</div>
+      <div class="ni" onclick="nav('importar-xml')" data-page="importar-xml"><span class="ic">📦</span> Importar XML</div>
+      <div class="ni" onclick="nav('importar-excel')" data-page="importar-excel"><span class="ic">📊</span> Importar Excel</div>
+      <div class="ni" onclick="ativarLeitorCodigo()" data-page="leitor"><span class="ic">📷</span> Leitor de Código</div>
     </div>
   </div>
 
   <div class="sb-section">
-    <div class="sb-section-label" onclick="toggleSbSection(this)">
-    <span class="sb-section-key">Análise</span>
-  <div class="sb-section-items">
-    <i class="sb-toggle-icon">▾</i>
-  </div>
-    <div class="ni" onclick="nav('metas')" data-page="metas">
-      <span class="ic">🎯</span> Metas
-    </div>
-    <div class="ni" onclick="nav('relatorios')" data-page="relatorios">
-      <span class="ic">📈</span> Relatórios
-  </div>
+    <div class="sb-section-label" onclick="toggleSbSection(this)"><span class="sb-section-key">Análise</span><i class="sb-toggle-icon">▾</i></div>
+    <div class="sb-section-items">
+      <div class="ni" onclick="nav('metas')" data-page="metas"><span class="ic">🎯</span> Metas</div>
+      <div class="ni" onclick="nav('relatorios')" data-page="relatorios"><span class="ic">📈</span> Relatórios</div>
     </div>
   </div>
 
   <div class="sb-section">
-    <div class="sb-section-label" onclick="toggleSbSection(this)">
-    <span class="sb-section-key">Cadastros</span>
-  <div class="sb-section-items">
-    <i class="sb-toggle-icon">▾</i>
-  </div>
-    <div class="ni" onclick="nav('clientes')" data-page="clientes">
-      <span class="ic">👥</span> Clientes
-    </div>
-    <div class="ni" onclick="nav('aniversarios')" data-page="aniversarios">
-      <span class="ic">🎂</span> Aniversariantes
-      <span class="bdg" id="bdg-aniv" style="display:none">0</span>
-    </div>
-    <div class="ni" onclick="nav('convenios')" data-page="convenios">
-      <span class="ic">🤝</span> Convênios
-    </div>
-    <div class="ni" onclick="nav('vendedores')" data-page="vendedores">
-      <span class="ic">🧑‍💼</span> Vendedores
-    </div>
-    <div class="ni" onclick="nav('laboratorios')" data-page="laboratorios">
-      <span class="ic">🏭</span> Laboratórios
-    </div>
-    <div class="ni" onclick="nav('fornecedores')" data-page="fornecedores">
-      <span class="ic">🚚</span> Fornecedores
-    </div>
-  <div class="sb-section-label" onclick="toggleSbSection(this)">
-    <span class="sb-section-key">Configurações</span>
-    <i class="sb-toggle-icon">▾</i>
-  </div>
-  <div class="sb-section-items">
-    <div class="ni" onclick="nav('config')" data-page="config">
-      <span class="ic">⚙️</span> Configurações
-    </div>
+    <div class="sb-section-label" onclick="toggleSbSection(this)"><span class="sb-section-key">Cadastros</span><i class="sb-toggle-icon">▾</i></div>
+    <div class="sb-section-items">
+      <div class="ni" onclick="nav('clientes')" data-page="clientes"><span class="ic">👥</span> Clientes</div>
+      <div class="ni" onclick="nav('aniversarios')" data-page="aniversarios"><span class="ic">🎂</span> Aniversariantes<span class="bdg" id="bdg-aniv" style="display:none">0</span></div>
+      <div class="ni" onclick="nav('convenios')" data-page="convenios"><span class="ic">🤝</span> Convênios</div>
+      <div class="ni" onclick="nav('vendedores')" data-page="vendedores"><span class="ic">🧑‍💼</span> Vendedores</div>
+      <div class="ni" onclick="nav('laboratorios')" data-page="laboratorios"><span class="ic">🏭</span> Laboratórios</div>
+      <div class="ni" onclick="nav('fornecedores')" data-page="fornecedores"><span class="ic">🚚</span> Fornecedores</div>
     </div>
   </div>
+
+  <div class="sb-section">
+    <div class="sb-section-label" onclick="toggleSbSection(this)"><span class="sb-section-key">Configurações</span><i class="sb-toggle-icon">▾</i></div>
+    <div class="sb-section-items">
+      <div class="ni" onclick="nav('config')" data-page="config"><span class="ic">⚙️</span> Configurações</div>
+      <div class="ni" onclick="nav('usuarios')" data-page="usuarios"><span class="ic">👤</span> Usuários</div>
+      <div class="ni" onclick="nav('fornecedores')" data-page="fornecedores"><span class="ic">🚚</span> Fornecedores</div>
+    </div>
+  </div>
+
 </nav>
 
 <!-- MAIN -->
