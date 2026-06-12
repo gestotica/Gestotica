@@ -3677,6 +3677,16 @@ function init(){
   }
   document.getElementById('sb').style.display='none';
   document.getElementById('main').style.display='none';
+
+  // RESTAURAR sessão Supabase salva (tenantId) — ESSENCIAL para sync na nuvem
+  try{
+    var sessaoSaas=JSON.parse(localStorage.getItem('gt_sessao_saas')||'null');
+    if(sessaoSaas&&sessaoSaas.tenantId){
+      _tenantId=sessaoSaas.tenantId;
+      _sessaoSaas=sessaoSaas;
+    }
+  }catch(e){}
+
   var s=sessaoAtual();
   if(s){
     document.getElementById('login-screen').classList.remove('show');
@@ -5452,13 +5462,30 @@ function loginUnificado(){
         var user=res.data;
         var tenant=user.tenants;
         if(tenant&&tenant.status==='suspenso'){if(err){err.textContent='Conta suspensa.';err.classList.add('show');}return;}
+        // SETAR _tenantId ANTES de qualquer sync
         _tenantId=tenant?tenant.id:null;
         _sessaoSaas={id:user.id,nome:user.nome,email:user.email,perfil:user.perfil,tenantId:_tenantId,tenantNome:tenant?tenant.nome:'',plano:tenant?tenant.plano:'basico'};
         localStorage.setItem('gt_sessao_saas',JSON.stringify(_sessaoSaas));
         setSessao({id:user.id,nome:user.nome,usuario:user.email,perfil:user.perfil,ativo:true});
-        toast('Bem-vindo, '+user.nome+'!','success');
+        toast('☁️ Conectado à nuvem: '+(tenant?tenant.nome:''),'success');
         syncDoSupabase(function(){document.getElementById('login-screen').classList.remove('show');iniciarSistema();});
-      } else { loginLocalUnificado(u,p,err); }
+      } else {
+        // Tentar também pelo email se veio por usuario e falhou
+        if(!u.includes('@')){
+          _supabase.from('usuarios').select('*,tenants(*)').eq('email',u).single().then(function(res2){
+            if(res2.data && res2.data.senha_hash && res2.data.senha_hash.trim()===btoa(p).trim()){
+              var user=res2.data;
+              var tenant=user.tenants;
+              _tenantId=tenant?tenant.id:null;
+              _sessaoSaas={id:user.id,nome:user.nome,email:user.email,perfil:user.perfil,tenantId:_tenantId,tenantNome:tenant?tenant.nome:'',plano:tenant?tenant.plano:'basico'};
+              localStorage.setItem('gt_sessao_saas',JSON.stringify(_sessaoSaas));
+              setSessao({id:user.id,nome:user.nome,usuario:user.email,perfil:user.perfil,ativo:true});
+              toast('☁️ Conectado à nuvem: '+(tenant?tenant.nome:''),'success');
+              syncDoSupabase(function(){document.getElementById('login-screen').classList.remove('show');iniciarSistema();});
+            } else { loginLocalUnificado(u,p,err); }
+          }).catch(function(){loginLocalUnificado(u,p,err);});
+        } else { loginLocalUnificado(u,p,err); }
+      }
     }).catch(function(){loginLocalUnificado(u,p,err);});
   } else { loginLocalUnificado(u,p,err); }
 }
