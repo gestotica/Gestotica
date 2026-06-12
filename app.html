@@ -3637,8 +3637,8 @@ function iniciarSistema(){
   }
   var s=sessaoAtual();
   if(!s){mostrarLogin();return;}
-  document.getElementById('sb').style.display='';
-  document.getElementById('main').style.display='';
+  document.getElementById('sb').style.display='flex';
+  document.getElementById('main').style.display='flex';
   carregarTema();
   // Badge
   var badge=document.getElementById('user-badge');
