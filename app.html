@@ -1263,7 +1263,7 @@ function fazerLogin(){
       // Sync dados da nuvem para local
       toast('Carregando seus dados...','success');
       syncDoSupabase(function(){
-        document.getElementById('login-screen').style.display='none';
+        document.getElementById('login-screen').classList.remove('show');
         iniciarSistema();
       });
     }).catch(function(){
@@ -1285,7 +1285,7 @@ function loginLocal(email, senha){
     return;
   }
   localStorage.setItem('gt_sessao',JSON.stringify(user));
-  document.getElementById('login-screen').style.display='none';
+  document.getElementById('login-screen').classList.remove('show');
   iniciarSistema();
 }
 
@@ -1339,7 +1339,7 @@ function criarConta(){
         _sessaoSaas={id:userData.id,nome:nome,email:email,perfil:'admin',tenantId:tenant.id,tenantNome:otica,plano:plano};
         localStorage.setItem('gt_sessao_saas',JSON.stringify(_sessaoSaas));
         toast('Conta criada! Bem-vindo ao Gestótica!','success');
-        document.getElementById('login-screen').style.display='none';
+        document.getElementById('login-screen').classList.remove('show');
         iniciarSistema();
       });
     });
@@ -1364,7 +1364,7 @@ function logout(){
   localStorage.removeItem('gt_sessao_saas');
   _sessaoSaas=null;
   _tenantId=null;
-  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-screen').classList.add('show');
   document.getElementById('main').style.display='none';
   document.getElementById('sb').style.display='none';
 }
@@ -3628,9 +3628,9 @@ function iniciarSistema(){
     var s=JSON.parse(sessaoSalva);
     if(s&&s.tenantId) _tenantId=s.tenantId;
     _sessaoSaas=s;
-    document.getElementById('login-screen').style.display='none';
+    document.getElementById('login-screen').classList.remove('show');
   } else {
-    document.getElementById('login-screen').style.display='flex';
+    document.getElementById('login-screen').classList.add('show');
     document.getElementById('main').style.display='none';
     if(document.getElementById('sb')) document.getElementById('sb').style.display='none';
     return;
