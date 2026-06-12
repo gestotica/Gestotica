@@ -1384,6 +1384,8 @@ function carregarExemplos(){
   var cfg=L(K.config,null);
   // Se já existe config salvo (mesmo com exemploOk=false), não sobrescrever
   if(cfg)return;
+  // Se tem tenantId (conta Supabase), não carregar exemplos — dados vêm da nuvem
+  if(_tenantId)return;
 
   var prods=[
     {id:'p1',nome:'Armação Ray-Ban RB5154',marca:'Ray-Ban',categoria:'Armações',codigo:'RB5154',custo:280,venda:790,estoque:5,minimo:2,local:'Vitrine A',garantiaMeses:12},
@@ -3643,6 +3645,20 @@ function iniciarSistema(){
     }
   }
   aplicarPermissoesSidebar(s.perfil);
+  // Sync da nuvem PRIMEIRO — depois carrega exemplos apenas se não houver dados
+  if(_supabase && _tenantId){
+    syncDoSupabase(function(){
+      carregarExemplos();
+      var cfg=L(K.config,{});
+      if(cfg.nome){document.getElementById('sb-brand').textContent=cfg.nome;document.title=cfg.nome+' — Sistema de Gestão para Ótica';}
+      var d=new Date();
+      document.getElementById('tb-date').textContent=d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+      nav('dashboard');
+      updateBadges();
+      updateCaixaBar();
+    });
+    return; // Sai aqui — o resto roda dentro do callback
+  }
   carregarExemplos();
   var cfg=L(K.config,{});
   if(cfg.nome){document.getElementById('sb-brand').textContent=cfg.nome;document.title=cfg.nome+' — Sistema de Gestão para Ótica';}
