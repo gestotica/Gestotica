@@ -751,7 +751,7 @@ function excluirGarantia(id){
       <div class="lf">
         <label>Senha</label>
         <input type="password" id="lg-pass" placeholder="••••••••" autocomplete="current-password"
-          onkeydown="if(event.key==='Enter')fazerLogin()">
+          onkeydown="if(event.key==='Enter')loginUnificado()">
       </div>
       <button class="login-btn" onmousedown="event.preventDefault()" onclick="loginUnificado()">Entrar →</button>
       <div class="login-err" id="login-error">Usuário ou senha incorretos.</div>
@@ -1394,18 +1394,9 @@ function fazerLogin(){
 }
 
 function loginLocal(email, senha){
-  // Login local (admin padrão)
-  var usuarios=[{email:'admin',senha:'admin123',nome:'Administrador',perfil:'admin'},{email:'vendedor',senha:'vend123',nome:'Vendedor',perfil:'vendedor'}];
-  var user=usuarios.find(function(u){return u.email===email&&u.senha===senha;});
-  if(!user){
-    var erro=document.getElementById('login-erro');
-    erro.textContent='E-mail ou senha incorretos';
-    erro.style.display='block';
-    return;
-  }
-  localStorage.setItem('gt_sessao',JSON.stringify(user));
-  document.getElementById('login-screen').classList.remove('show');
-  iniciarSistema();
+  // DESATIVADO: sistema é 100% nuvem
+  var erro=document.getElementById('login-erro');
+  if(erro){erro.textContent='Sem conexão com a nuvem. Verifique sua internet.';erro.style.display='block';}
 }
 
 function criarConta(){
@@ -1516,92 +1507,14 @@ var sv=function(id,val){var el=document.getElementById(id);if(el)el.value=val;};
 // DADOS DE EXEMPLO
 // ============================================================
 function carregarExemplos(){
+  // DESATIVADO PERMANENTEMENTE — sistema em produção, sem dados de exemplo.
+  // Apenas garante config mínimo se ainda não existir.
   var cfg=L(K.config,null);
-  // Se já existe config salvo (mesmo com exemploOk=false), não sobrescrever
-  if(cfg)return;
-  // Se tem tenantId (conta Supabase), não carregar exemplos — dados vêm da nuvem
-  if(_tenantId)return;
+  if(!cfg) S(K.config,{nome:'Gestótica',exemploOk:false,comissaoPadrao:5});
+  return;
 
-  var prods=[
-    {id:'p1',nome:'Armação Ray-Ban RB5154',marca:'Ray-Ban',categoria:'Armações',codigo:'RB5154',custo:280,venda:790,estoque:5,minimo:2,local:'Vitrine A',garantiaMeses:12},
-    {id:'p2',nome:'Armação Oakley OX8156',marca:'Oakley',categoria:'Armações',codigo:'OX8156',custo:320,venda:890,estoque:3,minimo:2,local:'Vitrine A',garantiaMeses:12},
-    {id:'p3',nome:'Lente Varilux Comfort 360',marca:'Varilux',categoria:'Lentes Oftálmicas',codigo:'VAR-C360',custo:420,venda:1100,estoque:8,minimo:3,local:'Gaveta L1',garantiaMeses:6},
-    {id:'p4',nome:'Lente Transitions Signature',marca:'Transitions',categoria:'Lentes Oftálmicas',codigo:'TRANS-SIG',custo:380,venda:980,estoque:6,minimo:3,local:'Gaveta L2',garantiaMeses:6},
-    {id:'p5',nome:'Óculos de Sol Oakley Holbrook',marca:'Oakley',categoria:'Óculos de Sol',codigo:'OAK-HOL',custo:350,venda:950,estoque:3,minimo:2,local:'Vitrine B',garantiaMeses:12},
-    {id:'p6',nome:'Óculos de Sol Ray-Ban Aviator',marca:'Ray-Ban',categoria:'Óculos de Sol',codigo:'RB3025',custo:290,venda:780,estoque:4,minimo:2,local:'Vitrine B',garantiaMeses:12},
-    {id:'p7',nome:'Lente de Contato Acuvue Oasys (cx)',marca:'Acuvue',categoria:'Lentes de Contato',codigo:'ACU-OAS',custo:85,venda:220,estoque:12,minimo:5,local:'Geladeira',garantiaMeses:0},
-    {id:'p8',nome:'Estojo Duplo Couro Premium',marca:'Própria',categoria:'Acessórios',codigo:'EST-001',custo:18,venda:55,estoque:1,minimo:5,local:'Gaveta E',garantiaMeses:0},
-    {id:'p9',nome:'Solução Lente de Contato 360ml',marca:'Renu',categoria:'Acessórios',codigo:'RENU-360',custo:22,venda:58,estoque:15,minimo:8,local:'Prateleira',garantiaMeses:0},
-  ];
-  var clientes=[
-    {id:'c1',nome:'Maria Silva',cpf:'111.111.111-11',telefone:'(71) 99999-1111',email:'maria@email.com',nascimento:'1985-04-12',obs:'Usa óculos grau alto',convenio:'',historico:[]},
-    {id:'c2',nome:'João Santos',cpf:'222.222.222-22',telefone:'(71) 99999-2222',email:'joao@email.com',nascimento:'1978-09-30',obs:'',convenio:'',historico:[]},
-    {id:'c3',nome:'Ana Beatriz Costa',cpf:'',telefone:'(71) 98888-3333',email:'',nascimento:'1995-01-15',obs:'',convenio:'conv1',historico:[]},
-    {id:'c4',nome:'Roberto Lima',cpf:'',telefone:'(71) 97777-4444',email:'',nascimento:'1972-07-22',obs:'Alérgico a metais',convenio:'',historico:[]},
-  ];
-  var vends=[
-    {id:'v1',nome:'Carlos Mendes',email:'carlos@gestotica.com',telefone:'(71) 99111-2233',comissao:5,ativo:true},
-    {id:'v2',nome:'Ana Paula Rocha',email:'ana@gestotica.com',telefone:'(71) 99222-3344',comissao:4,ativo:true},
-  ];
-  var labs=[
-    {id:'lab1',nome:'Lab Vision Bahia',contato:'(71) 3333-1111',prazoMedio:5,obs:'Parceiro principal'},
-    {id:'lab2',nome:'Ótica Express Lab',contato:'(71) 3333-2222',prazoMedio:3,obs:'Montagem rápida'},
-  ];
-  var convs=[
-    {id:'conv1',nome:'Unimed Bahia',cnpj:'00.111.222/0001-33',contato:'(71) 3111-0000',desconto:10,obs:'Desconto padrão 10%'},
-    {id:'conv2',nome:'Bradesco Saúde',cnpj:'00.222.333/0001-44',contato:'(71) 3222-0000',desconto:15,obs:'Desconto 15% em lentes'},
-  ];
-  var fin=[
-    {id:uid(),data:hoje(),tipo:'Entrada',categoria:'Venda',descricao:'Venda - Maria Silva',valor:1690,pagamento:'Cartão Crédito'},
-    {id:uid(),data:ontem(),tipo:'Saída',categoria:'Compra de Estoque',descricao:'Compra Luxottica',valor:3200,pagamento:'PIX'},
-    {id:uid(),data:hoje(),tipo:'Saída',categoria:'Despesa Fixa',descricao:'Internet',valor:180,pagamento:'Débito Automático'},
-    {id:uid(),data:daqui(-5),tipo:'Entrada',categoria:'Venda',descricao:'Venda - João Santos',valor:2200,pagamento:'PIX'},
-    {id:uid(),data:daqui(-8),tipo:'Saída',categoria:'Despesa Fixa',descricao:'Aluguel',valor:2500,pagamento:'Transferência'},
-    {id:uid(),data:daqui(-10),tipo:'Entrada',categoria:'Venda',descricao:'Venda - Ana Beatriz',valor:980,pagamento:'Dinheiro'},
-    {id:uid(),data:daqui(-12),tipo:'Entrada',categoria:'Venda',descricao:'Venda - Roberto Lima',valor:1550,pagamento:'Cartão Débito'},
-  ];
-  var pg=[
-    {id:uid(),fornecedor:'Imobiliária Centro',descricao:'Aluguel',valor:2500,vencimento:fimMes(),status:'Pendente'},
-    {id:uid(),fornecedor:'Luxottica',descricao:'Fatura pedido 1023',valor:4800,vencimento:daqui(7),status:'Pendente'},
-    {id:uid(),fornecedor:'Energia Elétrica',descricao:'Conta de luz',valor:320,vencimento:daqui(-2),status:'Atrasado'},
-    {id:uid(),fornecedor:'Varilux',descricao:'Compra de lentes',valor:1200,vencimento:daqui(15),status:'Pendente'},
-  ];
-  var rc=[
-    {id:uid(),cliente:'Pedro Almeida',descricao:'Saldo óculos premium',valor:650,vencimento:daqui(5),status:'Pendente'},
-    {id:uid(),cliente:'Lúcia Ferreira',descricao:'Parcelamento lentes 2/3',valor:400,vencimento:daqui(-3),status:'Atrasado'},
-    {id:uid(),cliente:'Marcos Nunes',descricao:'Óculos solar',valor:320,vencimento:daqui(10),status:'Pendente'},
-  ];
-  var metas=[{id:uid(),mes:mesAtual(),valor:18000}];
-  var os=[
-    {id:'OS-'+hoje().replace(/-/g,'')+'-001',clienteNome:'Maria Silva',clienteTelefone:'(71) 99999-1111',vendedor:'Carlos Mendes',laboratorio:'Lab Vision Bahia',dataAbertura:ontem(),prazoEntrega:daqui(2),tipoServico:'Lente com Grau',receita:{od:{esf:'-2.25',cil:'-0.50',eixo:'180',add:'',prisma:''},oe:{esf:'-2.00',cil:'',eixo:'',add:'',prisma:''},dp:'62',dnpOD:'31',dnpOE:'31',altOD:'',altOE:''},observacoesLab:'Lente antirreflexo + Transitions',status:'no_lab',timeline:[{etapa:'abertura',data:ontem(),usuario:'Carlos Mendes',obs:'OS criada'},{etapa:'envio_lab',data:ontem(),usuario:'Carlos Mendes',obs:'Enviado ao Lab Vision Bahia'}]},
-    {id:'OS-'+hoje().replace(/-/g,'')+'-002',clienteNome:'João Santos',clienteTelefone:'(71) 99999-2222',vendedor:'Ana Paula Rocha',laboratorio:'Ótica Express Lab',dataAbertura:hoje(),prazoEntrega:daqui(5),tipoServico:'Montagem',receita:{od:{esf:'',cil:'',eixo:'',add:'',prisma:''},oe:{esf:'',cil:'',eixo:'',add:'',prisma:''},dp:'',dnpOD:'',dnpOE:'',altOD:'',altOE:''},observacoesLab:'Montagem armação própria do cliente',status:'aguardando_envio',timeline:[{etapa:'abertura',data:hoje(),usuario:'Ana Paula Rocha',obs:'OS criada'}]},
-    {id:'OS-'+daqui(-3).replace(/-/g,'')+'-001',clienteNome:'Ana Beatriz Costa',clienteTelefone:'(71) 98888-3333',vendedor:'Carlos Mendes',laboratorio:'Lab Vision Bahia',dataAbertura:daqui(-3),prazoEntrega:daqui(1),tipoServico:'Lente com Grau',receita:{od:{esf:'-1.00',cil:'',eixo:'',add:'',prisma:''},oe:{esf:'-1.25',cil:'',eixo:'',add:'',prisma:''},dp:'60',dnpOD:'30',dnpOE:'30',altOD:'',altOE:''},observacoesLab:'',status:'voltou_lab',timeline:[{etapa:'abertura',data:daqui(-3),usuario:'Carlos Mendes',obs:''},{etapa:'envio_lab',data:daqui(-2),usuario:'Carlos Mendes',obs:''},{etapa:'retorno_lab',data:hoje(),usuario:'Ana Paula Rocha',obs:'Conferência OK'}]},
-  ];
-  var vendas=[
-    {id:uid(),cliente:'Maria Silva',clienteId:'c1',vendedor:'Carlos Mendes',vendedorId:'v1',data:ontem(),itens:[{produto:'Armação Ray-Ban RB5154',produtoId:'p1',qtd:1,preco:790},{produto:'Lente Varilux Comfort 360',produtoId:'p3',qtd:2,preco:900}],desconto:0,pagamento:'Cartão Crédito',status:'Em Produção',obs:'',convenio:'',total:2590},
-    {id:uid(),cliente:'João Santos',clienteId:'c2',vendedor:'Ana Paula Rocha',vendedorId:'v2',data:hoje(),itens:[{produto:'Óculos de Sol Oakley Holbrook',produtoId:'p5',qtd:1,preco:950}],desconto:50,pagamento:'PIX',status:'Pronto para Retirada',obs:'',convenio:'',total:900},
-    {id:uid(),cliente:'Roberto Lima',clienteId:'c4',vendedor:'Carlos Mendes',vendedorId:'v1',data:daqui(-5),itens:[{produto:'Lente Transitions Signature',produtoId:'p4',qtd:2,preco:980}],desconto:0,pagamento:'Dinheiro',status:'Entregue',obs:'',convenio:'',total:1960},
-  ];
-  var orcs=[
-    {id:uid(),cliente:'Pedro Almeida',clienteId:'',vendedor:'Carlos Mendes',data:hoje(),itens:[{produto:'Armação Oakley OX8156',produtoId:'p2',qtd:1,preco:890},{produto:'Lente Varilux Comfort 360',produtoId:'p3',qtd:2,preco:1100}],desconto:100,status:'Pendente',obs:'Cliente vai pensar',validade:daqui(7),total:2990},
-  ];
-  var ags=[
-    {id:uid(),cliente:'Maria Silva',telefone:'(71) 99999-1111',data:daqui(1),hora:'10:00',tipo:'Consulta',vendedor:'Carlos Mendes',obs:'Retorno anual',status:'Confirmado'},
-    {id:uid(),cliente:'Marcos Nunes',telefone:'(71) 99888-5555',data:daqui(2),hora:'14:30',tipo:'Entrega de OS',vendedor:'Ana Paula Rocha',obs:'Buscar óculos pronto',status:'Agendado'},
-    {id:uid(),cliente:'Roberto Lima',telefone:'(71) 97777-4444',data:daqui(3),hora:'09:00',tipo:'Adaptação',vendedor:'Carlos Mendes',obs:'',status:'Agendado'},
-  ];
-  var gars=[
-    {id:uid(),produto:'Armação Ray-Ban RB5154',produtoId:'p1',cliente:'Maria Silva',clienteId:'c1',dataVenda:daqui(-30),dataExpiracao:daqui(335),nVenda:'V-001',obs:'Garantia de fabricante 12 meses',status:'Ativa'},
-    {id:uid(),produto:'Lente Varilux Comfort 360',produtoId:'p3',cliente:'João Santos',clienteId:'c2',dataVenda:daqui(-60),dataExpiracao:daqui(120),nVenda:'V-002',obs:'',status:'Ativa'},
-  ];
-  var caixa=[{id:uid(),data:hoje(),status:'Aberto',abertura:850,fechamento:null,operador:'Carlos Mendes',movimentos:[]}];
-
-  S(K.produtos,prods);S(K.clientes,clientes);S(K.vendas,vendas);S(K.financeiro,fin);
-  S(K.pagar,pg);S(K.receber,rc);S(K.metas,metas);S(K.os,os);
-  S(K.orcamentos,orcs);S(K.agendamentos,ags);S(K.garantias,gars);
-  S(K.caixas,caixa);S(K.vendedores,vends);S(K.laboratorios,labs);S(K.convenios,convs);
-  S(K.config,{nome:'Gestótica',exemploOk:true,comissaoPadrao:5});
 }
+
 
 // ============================================================
 // NAV (com controle de acesso embutido)
@@ -3360,12 +3273,6 @@ function renderConfig(){
   html+='<button class="btn btn-p" style="margin-top:12px" onclick="salvarCfgNF()">💾 Salvar Configurações NF</button>';
   html+='</div>';
 
-  // Zona de perigo
-  html+='<div class="card" style="max-width:600px;border-left:4px solid var(--danger)">';
-  html+='<div class="card-title" style="color:var(--red)">⚠️ Zona de Perigo</div>';
-  html+='<p style="font-size:13px;color:var(--text3);margin:8px 0 14px">Limpa todos os dados de exemplo do sistema. Esta ação não pode ser desfeita.</p>';
-  html+='<button class="btn btn-d" onclick="limparExemplos()">🗑️ Limpar Dados de Exemplo</button>';
-  html+='</div>';
   return html;
 }
 function salvarConfig(){
@@ -3387,13 +3294,39 @@ function importarBkp(input){
   r.readAsText(f);
 }
 function limparExemplos(){
-  if(!confirm('Limpar todos os dados de exemplo? Esta ação não pode ser desfeita.'))return;
-  Object.values(K).forEach(function(key){localStorage.removeItem(key);});
-  // Salvar config sem exemploOk para não recarregar exemplos
-  S(K.config,{nome:'Gestótica',exemploOk:false,limpoComanual:true});
-  toast('Dados limpos! Agora cadastre seus próprios dados.','success');
-  render('config');
+  if(!confirm('⚠️ ATENÇÃO: isso vai APAGAR TODOS os dados desta conta (local E na nuvem) — produtos, clientes, vendas, OS, financeiro, tudo. Continuar?'))return;
+  if(!confirm('Tem certeza absoluta? Esta ação NÃO pode ser desfeita.'))return;
+
+  var keysLocal=Object.values(K);
+  function limparLocal(){
+    keysLocal.forEach(function(key){localStorage.removeItem(key);});
+    S(K.config,{nome:'Gestótica',exemploOk:false,limpoComanual:true});
+  }
+
+  if(!_supabase||!_tenantId){
+    limparLocal();
+    toast('Dados locais limpos!','success');
+    setTimeout(function(){location.reload();},800);
+    return;
+  }
+
+  setSyncStatus('syncing');
+  var tabelas=Object.keys(TABELA_MAP).map(function(k){return TABELA_MAP[k];});
+  var done=0, erros=0;
+  tabelas.forEach(function(tabela){
+    _supabase.from(tabela).delete().eq('tenant_id',_tenantId).then(function(res){
+      if(res.error){erros++;console.warn('Limpar ['+tabela+']:',res.error.message);}
+      done++;
+      if(done===tabelas.length){
+        setSyncStatus(erros?'error':'ok');
+        limparLocal();
+        toast(erros?('Limpo com '+erros+' erro(s). Veja console.'):'Tudo limpo! Pode começar do zero.','success');
+        setTimeout(function(){location.reload();},1200);
+      }
+    });
+  });
 }
+
 
 // ============================================================
 // ANIVERSARIANTES
@@ -3512,25 +3445,8 @@ function mostrarLogin(){
 }
 
 function fazerLogin(){
-  var usr=(document.getElementById('lg-user').value||'').trim();
-  var pwd=(document.getElementById('lg-pass').value||'');
-  var err=document.getElementById('login-error');
-  if(err) err.classList.remove('show');
-  if(!usr||!pwd){if(err)err.classList.add('show');return;}
-  var usuarios=getUsuarios();
-  var user=null;
-  for(var i=0;i<usuarios.length;i++){
-    if(usuarios[i].usuario===usr&&usuarios[i].senha===pwd&&usuarios[i].ativo!==false){user=usuarios[i];break;}
-  }
-  // Fallback: credenciais padrão hardcoded
-  if(!user){
-    if(usr==='admin'&&pwd==='admin123') user={id:'u1',nome:'Administrador',usuario:'admin',senha:'admin123',perfil:'admin',ativo:true};
-    else if(usr==='vendedor'&&pwd==='vend123') user={id:'u2',nome:'Vendedor',usuario:'vendedor',senha:'vend123',perfil:'vendedor',ativo:true};
-  }
-  if(!user){if(err)err.classList.add('show');document.getElementById('lg-pass').value='';return;}
-  setSessao(user);
-  document.getElementById('login-screen').classList.remove('show');
-  iniciarSistema();
+  // Login é SEMPRE pela nuvem — nunca local (corrige PC2 vendo dados de exemplo)
+  loginUnificado();
 }
 
 function fazerLogout(){
@@ -3825,6 +3741,13 @@ function init(){
   }catch(e){}
 
   var s=sessaoAtual();
+  // Sessão local antiga (sem conta na nuvem) não vale mais — força novo login
+  if(s && !_tenantId){
+    clearSessao();
+    localStorage.removeItem('gt_sessao_saas');
+    Object.keys(TABELA_MAP).forEach(function(k){ localStorage.removeItem(k); });
+    s=null;
+  }
   if(s){
     document.getElementById('login-screen').classList.remove('show');
     iniciarSistema();
@@ -5594,56 +5517,48 @@ function loginUnificado(){
     if(btn){btn.textContent='Entrar →';btn.disabled=false;}
   }
 
-  // Sem Supabase = modo offline puro (só local)
-  if(!_supabase){ loginFallbackLocal(u,p,err); return; }
+  // Sistema é 100% nuvem — sem fallback local
+  if(!_supabase){ mostrarErro('Sem conexão com a nuvem. Recarregue a página e verifique sua internet.'); return; }
 
-  // Busca usuario por email OU por login (usa maybeSingle p/ não dar erro quando não acha)
-  var col = u.includes('@') ? 'email' : 'usuario';
-  _supabase.from('usuarios').select('*,tenants(*)').eq(col,u).maybeSingle().then(function(res){
-    // Erro de rede/RLS — NUNCA cair em modo local; mostrar erro real
+  // Login via RPC segura (a tabela usuarios não é mais legível publicamente)
+  _supabase.rpc('gestotica_login',{_user:u,_senha_b64:btoa(p)}).then(function(res){
     if(res.error){
       console.error('Login error:', res.error);
       mostrarErro('Erro de conexão: '+res.error.message);
       return;
     }
-    var user=res.data;
-    // Se não achou e pesquisou por 'usuario', tenta por email como fallback
-    if(!user && col==='usuario'){
-      _supabase.from('usuarios').select('*,tenants(*)').eq('email',u).maybeSingle().then(function(r2){
+    var rows=res.data||[];
+    if(!rows.length && u!==u.toLowerCase()){
+      // tenta com email/usuario em minúsculas
+      _supabase.rpc('gestotica_login',{_user:u.toLowerCase(),_senha_b64:btoa(p)}).then(function(r2){
         if(r2.error){mostrarErro('Erro de conexão: '+r2.error.message);return;}
-        if(!r2.data){mostrarErro('Usuário não encontrado');return;}
-        validarESalvar(r2.data);
+        if(!r2.data||!r2.data.length){mostrarErro('Usuário ou senha incorretos');return;}
+        validarESalvar(r2.data[0]);
       });
       return;
     }
-    if(!user){mostrarErro('Usuário não encontrado');return;}
-    validarESalvar(user);
+    if(!rows.length){mostrarErro('Usuário ou senha incorretos');return;}
+    validarESalvar(rows[0]);
   }).catch(function(e){
     console.error('Login exception:', e);
     mostrarErro('Sem conexão com a nuvem. Verifique sua internet.');
   });
 
-  function validarESalvar(user){
-    if(!user.senha_hash || user.senha_hash.trim()!==btoa(p).trim()){
-      mostrarErro('Senha incorreta');
-      return;
-    }
-    if(user.ativo===false){mostrarErro('Usuário desativado');return;}
-    var tenant=user.tenants;
-    if(!tenant){mostrarErro('Conta sem ótica vinculada. Contate o suporte.');return;}
-    if(tenant.status==='suspenso'){mostrarErro('Conta suspensa. Contate o suporte.');return;}
+  function validarESalvar(r){
+    if(!r.tenant_id){mostrarErro('Conta sem ótica vinculada. Contate o suporte.');return;}
+    if(r.tenant_status==='suspenso'){mostrarErro('Conta suspensa. Contate o suporte.');return;}
 
-    _tenantId=tenant.id;
-    _sessaoSaas={id:user.id,nome:user.nome,email:user.email,perfil:user.perfil,
-      tenantId:_tenantId,tenantNome:tenant.nome,plano:tenant.plano};
+    _tenantId=r.tenant_id;
+    _sessaoSaas={id:r.user_id,nome:r.nome,email:r.email,perfil:r.perfil,
+      tenantId:_tenantId,tenantNome:r.tenant_nome,plano:r.tenant_plano};
     localStorage.setItem('gt_sessao_saas',JSON.stringify(_sessaoSaas));
-    setSessao({id:user.id,nome:user.nome,usuario:user.email,perfil:user.perfil,ativo:true});
+    setSessao({id:r.user_id,nome:r.nome,usuario:r.email||r.usuario,perfil:r.perfil,ativo:true});
 
     // LIMPA dados de exemplo de qualquer login anterior — evita "vazamento" entre PCs
     Object.keys(TABELA_MAP).forEach(function(k){ localStorage.removeItem(k); });
 
     if(btn){btn.textContent='Entrar →';btn.disabled=false;}
-    toast('☁️ Conectado: '+tenant.nome,'success');
+    toast('☁️ Conectado: '+r.tenant_nome,'success');
     syncDoSupabase(function(){
       document.getElementById('login-screen').classList.remove('show');
       iniciarSistema();
@@ -5927,15 +5842,9 @@ function loginLocalUnificado(u,p,err){
 }
 
 function loginFallbackLocal(u,p,err){
-  var usuarios=getUsuarios(),user=null;
-  for(var i=0;i<usuarios.length;i++){if(usuarios[i].usuario===u&&usuarios[i].senha===p&&usuarios[i].ativo!==false){user=usuarios[i];break;}}
-  if(!user){
-    if(u==='admin'&&p==='admin123')user={id:'u1',nome:'Administrador',usuario:'admin',senha:'admin123',perfil:'admin',ativo:true};
-    else if(u==='vendedor'&&p==='vend123')user={id:'u2',nome:'Vendedor',usuario:'vendedor',senha:'vend123',perfil:'vendedor',ativo:true};
-  }
-  if(!user){if(err)err.classList.add('show');document.getElementById('lg-pass').value='';return;}
-  setSessao(user);
-  document.getElementById('login-screen').classList.remove('show');
-  iniciarSistema();
+  // DESATIVADO: login local criava sessão sem nuvem e mostrava dados de exemplo
+  if(err){err.textContent='Sem conexão com a nuvem. Verifique sua internet e recarregue a página.';err.classList.add('show');}
+  var btn=document.querySelector('.login-btn');
+  if(btn){btn.textContent='Entrar →';btn.disabled=false;}
 }
 </script></body></html>
