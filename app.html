@@ -1080,6 +1080,7 @@ function excluirGarantia(id){
         <span id="tt-label">Escuro</span>
       </div>
       <span class="tb-date" id="tb-date"></span>
+      <span id="sync-badge" title="Status de sincronização" style="font-size:12px;font-weight:600;padding:6px 10px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:#8b95b0;cursor:default">☁️</span>
       <div id="user-badge" onclick="menuUsuario()">
         <span id="user-nome-badge">—</span>
         <span id="user-role-badge" class="role-chip"></span>
@@ -1161,57 +1162,175 @@ var TABELA_MAP={
   'gt_metas':'metas'
 };
 
-// Carregar dados do Supabase para localStorage (suporta jsonb e colunas diretas)
+// Tabelas com schema "tradicional" (colunas reais, sem jsonb 'dados')
+// configuracoes usa tenant_id como PK
+var TABELAS_COLUNAS_DIRETAS={'configuracoes':true};
+
+// Status visual de sincronização
+var _syncStatus='idle'; // idle | syncing | ok | error
+function setSyncStatus(s,msg){
+  _syncStatus=s;
+  var el=document.getElementById('sync-badge');
+  if(!el)return;
+  var map={
+    idle:{txt:'☁️',color:'#8b95b0',title:'Aguardando'},
+    syncing:{txt:'🔄 Sincronizando…',color:'#f5a623',title:'Enviando para a nuvem'},
+    ok:{txt:'✅ Sincronizado',color:'#34d399',title:'Tudo salvo na nuvem'},
+    error:{txt:'⚠️ Erro de sync',color:'#f87171',title:msg||'Falha ao sincronizar'}
+  };
+  var c=map[s]||map.idle;
+  el.textContent=c.txt;
+  el.style.color=c.color;
+  el.title=c.title;
+}
+
+// Carregar dados do Supabase para localStorage
+// IMPORTANTE: sempre sobrescreve o localStorage (mesmo se vazio) — assim PCs novos
+// não ficam mostrando dados de exemplo quando a nuvem está vazia.
 function syncDoSupabase(callback){
   if(!_supabase||!_tenantId){if(callback)callback();return;}
+  setSyncStatus('syncing');
   var tabelas=Object.keys(TABELA_MAP);
-  var done=0;
+  var done=0, erros=0;
   tabelas.forEach(function(key){
     var tabela=TABELA_MAP[key];
     _supabase.from(tabela).select("*").eq("tenant_id",_tenantId).then(function(res){
-      if(res.data&&res.data.length>0){
-        var primeiro=res.data[0];
-        var items;
-        if(primeiro.dados!==undefined){
-          items=res.data.map(function(row){return row.dados;}).filter(Boolean);
-        } else {
-          items=res.data.map(function(row){
-            var obj={};
-            Object.keys(row).forEach(function(k){
-              if(k!=="tenant_id"&&k!=="created_at"&&k!=="updated_at") obj[k]=row[k];
+      if(res.error){
+        erros++;
+        console.warn("Sync DOWN falhou ["+tabela+"]:",res.error.message);
+      } else {
+        var items=[];
+        if(res.data && res.data.length){
+          if(TABELAS_COLUNAS_DIRETAS[tabela]){
+            items=res.data.map(function(row){
+              var obj={};
+              Object.keys(row).forEach(function(k){
+                if(k!=="tenant_id"&&k!=="created_at"&&k!=="updated_at") obj[k]=row[k];
+              });
+              return obj;
             });
-            return obj;
-          });
+          } else if(res.data[0].dados!==undefined){
+            items=res.data.map(function(row){return row.dados;}).filter(Boolean);
+          } else {
+            items=res.data.map(function(row){
+              var obj={};
+              Object.keys(row).forEach(function(k){
+                if(k!=="tenant_id"&&k!=="created_at"&&k!=="updated_at") obj[k]=row[k];
+              });
+              return obj;
+            });
+          }
         }
-        if(items.length>0){
-          localStorage.setItem(key,JSON.stringify(items));
-          console.log("Sync "+tabela+": "+items.length+" registros");
+        // configuracoes salva como objeto único, não array
+        if(tabela==='configuracoes'){
+          localStorage.setItem(key, JSON.stringify(items[0]||{}));
+        } else {
+          // SEMPRE sobrescreve — corrige bug do PC novo ver dados de exemplo
+          localStorage.setItem(key, JSON.stringify(items));
         }
+        console.log("Sync ⬇ "+tabela+": "+items.length+" registros");
       }
       done++;
-      if(done===tabelas.length&&callback)callback();
+      if(done===tabelas.length){
+        setSyncStatus(erros?'error':'ok', erros?(erros+' tabela(s) com erro'):'');
+        if(callback)callback();
+      }
     }).catch(function(e){
-      console.warn("Sync falhou ["+tabela+"]:",e);
+      erros++;
+      console.warn("Sync DOWN exception ["+tabela+"]:",e);
       done++;
-      if(done===tabelas.length&&callback)callback();
+      if(done===tabelas.length){
+        setSyncStatus('error', 'Falha de conexão');
+        if(callback)callback();
+      }
     });
   });
 }
 
-// Salvar no Supabase após salvar no localStorage (usando jsonb)
+// Salvar no Supabase após salvar no localStorage
 function syncParaSupabase(key, dados){
   if(!_supabase||!_tenantId)return;
   var tabela=TABELA_MAP[key];
   if(!tabela)return;
+  setSyncStatus('syncing');
+
+  // configuracoes: tabela 1-por-tenant, colunas diretas, PK = tenant_id
+  if(tabela==='configuracoes'){
+    var cfg=Array.isArray(dados)?(dados[0]||{}):(dados||{});
+    var row=Object.assign({}, cfg, {tenant_id:_tenantId});
+    delete row.id; // PK é tenant_id, não id
+    _supabase.from('configuracoes').upsert(row,{onConflict:'tenant_id'}).then(function(res){
+      if(res.error){
+        setSyncStatus('error', res.error.message);
+        console.error('Sync UP [configuracoes]:', res.error);
+        if(typeof toast==='function') toast('⚠️ Erro ao salvar configurações: '+res.error.message,'error');
+      } else {
+        setSyncStatus('ok');
+      }
+    });
+    return;
+  }
+
+  // Demais tabelas: schema jsonb {id, tenant_id, dados}
   var arr=Array.isArray(dados)?dados:[dados];
   var rows=arr.map(function(item){
     var id=item.id||(Date.now().toString(36)+Math.random().toString(36).substr(2,5));
     if(!item.id) item.id=id;
-    return {id:id, tenant_id:_tenantId, dados:item};
+    return {id:String(id), tenant_id:_tenantId, dados:item};
   });
+  if(!rows.length){setSyncStatus('ok');return;}
   _supabase.from(tabela).upsert(rows,{onConflict:'id'}).then(function(res){
-    if(res.error)console.warn('Sync error ['+tabela+']:',res.error.message);
+    if(res.error){
+      setSyncStatus('error', res.error.message);
+      console.error('Sync UP ['+tabela+']:', res.error);
+      if(typeof toast==='function') toast('⚠️ Falha ao salvar na nuvem ('+tabela+'): '+res.error.message,'error');
+      // Enfileira para nova tentativa
+      enfileirarSync(key, dados);
+    } else {
+      setSyncStatus('ok');
+    }
+  }).catch(function(e){
+    setSyncStatus('error', 'Sem conexão');
+    enfileirarSync(key, dados);
   });
+}
+
+// Fila offline simples — guarda no localStorage e tenta reenviar
+function enfileirarSync(key, dados){
+  try{
+    var fila=JSON.parse(localStorage.getItem('gt_sync_queue')||'[]');
+    fila.push({key:key, dados:dados, ts:Date.now()});
+    if(fila.length>200) fila=fila.slice(-200);
+    localStorage.setItem('gt_sync_queue', JSON.stringify(fila));
+  }catch(e){}
+}
+function processarFilaSync(){
+  if(!_supabase||!_tenantId)return;
+  var fila=[];
+  try{fila=JSON.parse(localStorage.getItem('gt_sync_queue')||'[]');}catch(e){}
+  if(!fila.length)return;
+  localStorage.removeItem('gt_sync_queue');
+  console.log('Reenviando '+fila.length+' itens da fila offline…');
+  fila.forEach(function(it){syncParaSupabase(it.key, it.dados);});
+}
+window.addEventListener('online', processarFilaSync);
+
+// Realtime — escuta mudanças feitas em outros PCs
+var _realtimeChannel=null;
+function ativarRealtime(){
+  if(!_supabase||!_tenantId||_realtimeChannel)return;
+  try{
+    _realtimeChannel=_supabase.channel('tenant-'+_tenantId)
+      .on('postgres_changes',{event:'*',schema:'public',filter:'tenant_id=eq.'+_tenantId},function(payload){
+        console.log('🔔 Mudança remota:', payload.table);
+        // Re-sync silencioso (sem mostrar 'syncing')
+        syncDoSupabase(function(){
+          // Atualiza a tela atual se possível
+          try{ if(typeof nav==='function' && window._currentPage) nav(window._currentPage); }catch(e){}
+        });
+      })
+      .subscribe();
+  }catch(e){console.warn('Realtime não disponível:',e);}
 }
 
 // S() override moved to after S definition below
@@ -3672,6 +3791,8 @@ function iniciarSistema(){
       nav('dashboard');
       updateBadges();
       updateCaixaBar();
+      ativarRealtime();
+      processarFilaSync();
     });
     return; // Sai aqui — o resto roda dentro do callback
   }
@@ -5464,46 +5585,72 @@ function loginUnificado(){
   var p=(document.getElementById('lg-pass').value||'');
   var err=document.getElementById('login-error');
   var btn=document.querySelector('.login-btn');
-  if(err) err.classList.remove('show');
+  if(err){err.classList.remove('show'); err.textContent='Usuário ou senha incorretos';}
   if(!u||!p){if(err)err.classList.add('show');return;}
   if(btn){btn.textContent='Entrando...';btn.disabled=true;}
-  if(_supabase){
-    // Buscar por email OU por login_padrao (ex: gestotica.adm0001)
-    var query=u.includes('@')
-      ?_supabase.from('usuarios').select('*,tenants(*)').eq('email',u).single()
-      :_supabase.from('usuarios').select('*,tenants(*)').eq('usuario',u).single();
-    query.then(function(res){
-      if(btn){btn.textContent='Entrar →';btn.disabled=false;}
-      if(res.data && res.data.senha_hash && res.data.senha_hash.trim()===btoa(p).trim()){
-        var user=res.data;
-        var tenant=user.tenants;
-        if(tenant&&tenant.status==='suspenso'){if(err){err.textContent='Conta suspensa.';err.classList.add('show');}return;}
-        // SETAR _tenantId ANTES de qualquer sync
-        _tenantId=tenant?tenant.id:null;
-        _sessaoSaas={id:user.id,nome:user.nome,email:user.email,perfil:user.perfil,tenantId:_tenantId,tenantNome:tenant?tenant.nome:'',plano:tenant?tenant.plano:'basico'};
-        localStorage.setItem('gt_sessao_saas',JSON.stringify(_sessaoSaas));
-        setSessao({id:user.id,nome:user.nome,usuario:user.email,perfil:user.perfil,ativo:true});
-        toast('☁️ Conectado à nuvem: '+(tenant?tenant.nome:''),'success');
-        syncDoSupabase(function(){document.getElementById('login-screen').classList.remove('show');iniciarSistema();});
-      } else {
-        // Tentar também pelo email se veio por usuario e falhou
-        if(!u.includes('@')){
-          _supabase.from('usuarios').select('*,tenants(*)').eq('email',u).single().then(function(res2){
-            if(res2.data && res2.data.senha_hash && res2.data.senha_hash.trim()===btoa(p).trim()){
-              var user=res2.data;
-              var tenant=user.tenants;
-              _tenantId=tenant?tenant.id:null;
-              _sessaoSaas={id:user.id,nome:user.nome,email:user.email,perfil:user.perfil,tenantId:_tenantId,tenantNome:tenant?tenant.nome:'',plano:tenant?tenant.plano:'basico'};
-              localStorage.setItem('gt_sessao_saas',JSON.stringify(_sessaoSaas));
-              setSessao({id:user.id,nome:user.nome,usuario:user.email,perfil:user.perfil,ativo:true});
-              toast('☁️ Conectado à nuvem: '+(tenant?tenant.nome:''),'success');
-              syncDoSupabase(function(){document.getElementById('login-screen').classList.remove('show');iniciarSistema();});
-            } else { loginLocalUnificado(u,p,err); }
-          }).catch(function(){loginLocalUnificado(u,p,err);});
-        } else { loginLocalUnificado(u,p,err); }
-      }
-    }).catch(function(){loginLocalUnificado(u,p,err);});
-  } else { loginLocalUnificado(u,p,err); }
+
+  function mostrarErro(msg){
+    if(err){err.textContent=msg||'Usuário ou senha incorretos'; err.classList.add('show');}
+    if(btn){btn.textContent='Entrar →';btn.disabled=false;}
+  }
+
+  // Sem Supabase = modo offline puro (só local)
+  if(!_supabase){ loginFallbackLocal(u,p,err); return; }
+
+  // Busca usuario por email OU por login (usa maybeSingle p/ não dar erro quando não acha)
+  var col = u.includes('@') ? 'email' : 'usuario';
+  _supabase.from('usuarios').select('*,tenants(*)').eq(col,u).maybeSingle().then(function(res){
+    // Erro de rede/RLS — NUNCA cair em modo local; mostrar erro real
+    if(res.error){
+      console.error('Login error:', res.error);
+      mostrarErro('Erro de conexão: '+res.error.message);
+      return;
+    }
+    var user=res.data;
+    // Se não achou e pesquisou por 'usuario', tenta por email como fallback
+    if(!user && col==='usuario'){
+      _supabase.from('usuarios').select('*,tenants(*)').eq('email',u).maybeSingle().then(function(r2){
+        if(r2.error){mostrarErro('Erro de conexão: '+r2.error.message);return;}
+        if(!r2.data){mostrarErro('Usuário não encontrado');return;}
+        validarESalvar(r2.data);
+      });
+      return;
+    }
+    if(!user){mostrarErro('Usuário não encontrado');return;}
+    validarESalvar(user);
+  }).catch(function(e){
+    console.error('Login exception:', e);
+    mostrarErro('Sem conexão com a nuvem. Verifique sua internet.');
+  });
+
+  function validarESalvar(user){
+    if(!user.senha_hash || user.senha_hash.trim()!==btoa(p).trim()){
+      mostrarErro('Senha incorreta');
+      return;
+    }
+    if(user.ativo===false){mostrarErro('Usuário desativado');return;}
+    var tenant=user.tenants;
+    if(!tenant){mostrarErro('Conta sem ótica vinculada. Contate o suporte.');return;}
+    if(tenant.status==='suspenso'){mostrarErro('Conta suspensa. Contate o suporte.');return;}
+
+    _tenantId=tenant.id;
+    _sessaoSaas={id:user.id,nome:user.nome,email:user.email,perfil:user.perfil,
+      tenantId:_tenantId,tenantNome:tenant.nome,plano:tenant.plano};
+    localStorage.setItem('gt_sessao_saas',JSON.stringify(_sessaoSaas));
+    setSessao({id:user.id,nome:user.nome,usuario:user.email,perfil:user.perfil,ativo:true});
+
+    // LIMPA dados de exemplo de qualquer login anterior — evita "vazamento" entre PCs
+    Object.keys(TABELA_MAP).forEach(function(k){ localStorage.removeItem(k); });
+
+    if(btn){btn.textContent='Entrar →';btn.disabled=false;}
+    toast('☁️ Conectado: '+tenant.nome,'success');
+    syncDoSupabase(function(){
+      document.getElementById('login-screen').classList.remove('show');
+      iniciarSistema();
+      ativarRealtime();
+      processarFilaSync();
+    });
+  }
 }
 
 function abrirCadastro(){
