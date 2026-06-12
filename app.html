@@ -1198,12 +1198,7 @@ function syncParaSupabase(key, dados){
   });
 }
 
-// Sobrescrever S() para também sincronizar com Supabase
-var _S_original=S;
-S=function(key,dados){
-  _S_original(key,dados);
-  syncParaSupabase(key,dados);
-};
+// S() override moved to after S definition below
 
 // ============================================================
 // LOGIN SAAS
@@ -1363,6 +1358,13 @@ function logout(){
 var K={produtos:'gt_produtos',clientes:'gt_clientes',vendas:'gt_vendas',financeiro:'gt_fin',pagar:'gt_pagar',receber:'gt_receber',entradas:'gt_entradas',metas:'gt_metas',os:'gt_os',config:'gt_config',orcamentos:'gt_orc',agendamentos:'gt_ag',trocas:'gt_trocas',caixas:'gt_caixas',comissoes:'gt_com',garantias:'gt_gar',convenios:'gt_conv',vendedores:'gt_vend',laboratorios:'gt_labs',crediario:'gt_crediario'};
 var S=(k,d)=>localStorage.setItem(k,JSON.stringify(d));
 var L=(k,p=[])=>{try{var v=localStorage.getItem(k);return v?JSON.parse(v):p}catch(e){return p}};
+
+// Sobrescrever S() para sincronizar com Supabase (DEVE ficar após definição de S)
+var _S_original=S;
+S=function(key,dados){
+  _S_original(key,dados);
+  syncParaSupabase(key,dados);
+};
 var uid=()=>Date.now().toString(36)+Math.random().toString(36).substr(2,5);
 var hoje=()=>new Date().toISOString().split('T')[0];
 var ontem=()=>{var d=new Date();d.setDate(d.getDate()-1);return d.toISOString().split('T')[0]};
