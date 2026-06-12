@@ -1161,21 +1161,37 @@ var TABELA_MAP={
   'gt_metas':'metas'
 };
 
-// Carregar dados do Supabase para localStorage (sync via jsonb)
+// Carregar dados do Supabase para localStorage (suporta jsonb e colunas diretas)
 function syncDoSupabase(callback){
   if(!_supabase||!_tenantId){if(callback)callback();return;}
   var tabelas=Object.keys(TABELA_MAP);
   var done=0;
   tabelas.forEach(function(key){
     var tabela=TABELA_MAP[key];
-    _supabase.from(tabela).select('dados').eq('tenant_id',_tenantId).then(function(res){
+    _supabase.from(tabela).select("*").eq("tenant_id",_tenantId).then(function(res){
       if(res.data&&res.data.length>0){
-        var items=res.data.map(function(row){return row.dados;}).filter(Boolean);
-        if(items.length>0) localStorage.setItem(key,JSON.stringify(items));
+        var primeiro=res.data[0];
+        var items;
+        if(primeiro.dados!==undefined){
+          items=res.data.map(function(row){return row.dados;}).filter(Boolean);
+        } else {
+          items=res.data.map(function(row){
+            var obj={};
+            Object.keys(row).forEach(function(k){
+              if(k!=="tenant_id"&&k!=="created_at"&&k!=="updated_at") obj[k]=row[k];
+            });
+            return obj;
+          });
+        }
+        if(items.length>0){
+          localStorage.setItem(key,JSON.stringify(items));
+          console.log("Sync "+tabela+": "+items.length+" registros");
+        }
       }
       done++;
       if(done===tabelas.length&&callback)callback();
-    }).catch(function(){
+    }).catch(function(e){
+      console.warn("Sync falhou ["+tabela+"]:",e);
       done++;
       if(done===tabelas.length&&callback)callback();
     });
